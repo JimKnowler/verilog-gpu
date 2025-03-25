@@ -1,5 +1,5 @@
 
 ```
-$ bazel build //gpu::main
-$ ./bazel-bin/gpu/main
+$ bazel build //main::main
+$ ./bazel-bin/main/main
 ```
