@@ -13,6 +13,15 @@ int main(int argc, char* argv[])
     // This needs to be called before you create any model
     contextp->commandArgs(argc, argv);
 
+    // enable internal verilator state for waveform tracing
+    // - note : do this before creating module, so that we have the option of 
+    //          starting a trace at another time.  
+    //          See VerilatedVcdC, top->trace(), trace->open(), trace->dump(), and trace->close()
+    // contextp->traceEverOn(true);
+
+    // set debug level
+    // contextp->debug(1);
+
     // Construct the Verilated model, from Vtop.h generated from Verilating "top.v"
     VTop* const top = new VTop{contextp};
 
@@ -27,6 +36,7 @@ int main(int argc, char* argv[])
 
     // Destroy model
     delete top;
+    delete contextp;
 
     return 0;
 }
