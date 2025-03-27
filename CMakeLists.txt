@@ -18,7 +18,7 @@ endif()
 
 include_directories(.)
 
-add_executable(Main main/main.cpp gpu/App.cpp)
+add_executable(Main gpu/App.cpp)
 verilate(Main SOURCES gpu/rtl/Top.v)
 
 target_link_libraries(Main PRIVATE
