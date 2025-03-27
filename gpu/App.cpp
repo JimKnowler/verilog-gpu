@@ -4,10 +4,14 @@ namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
 
-    const olc::vi2d kOrigin = {400,150};
-    const olc::vi2d kRasterSize = {400,400};
+    const olc::vi2d kOrigin = {400, 150};
+    const olc::vi2d kRasterSize = {400, 400};
 
     const int kRasterizerBatchSize = 2000;
+
+    olc::vi2d v1{50, 40};
+    olc::vi2d v2{300, 300};
+    olc::vi2d v3{100, 360};
 }
 
 int main(int argc, char* argv[])
@@ -43,6 +47,13 @@ bool App::OnUserCreate()
 
     // Construct the Verilated model, from VTriangleRasterizer.h generated from Verilating "VTriangleRasterizer.v"
     Rasterizer = new VTriangleRasterizer{Context};
+
+    Rasterizer->v1x = v1.x;
+    Rasterizer->v1y = v1.y;
+    Rasterizer->v2x = v2.x;
+    Rasterizer->v2y = v2.y;
+    Rasterizer->v3x = v3.x;
+    Rasterizer->v3y = v3.y;    
 
     return true;
 }
@@ -94,8 +105,6 @@ void App::RasterizePixel(int x, int y)
 {
     Rasterizer->x = x;
     Rasterizer->y = y;
-
-    // TODO: triangle vertices
 
     Rasterizer->eval();
 
