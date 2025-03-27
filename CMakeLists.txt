@@ -16,5 +16,12 @@ if(NOT verilator_FOUND)
     )
 endif()
 
-add_executable(Main sim_main.cpp)
+include_directories(.)
+
+add_executable(Main main/main.cpp gpu/App.cpp)
 verilate(Main SOURCES gpu/rtl/Top.v)
+
+target_link_libraries(Main PRIVATE
+    "-framework OpenGL"
+    "-framework GLUT"
+)
