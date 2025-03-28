@@ -1,38 +1,41 @@
 module TriangleRasterizer (
     // x,y screen location of rasterized pixel
-    input [9:0] x,
-    input [9:0] y,
+    input [9:0] x, y,
 
     // x,y screen location of triangle vertices
-    input [9:0] v1x,
-    input [9:0] v1y,
-    input [9:0] v2x,
-    input [9:0] v2y,
-    input [9:0] v3x,
-    input [9:0] v3y,
+    input [9:0] v1x, v1y, v2x, v2y, v3x, v3y,
 
     // r,g,b colour output of rasterized pixel
-    output reg [7:0] r,
-    output reg [7:0] g,
-    output reg [7:0] b
+    output reg [7:0] r, g, b
 );
 
+// determine on which side of edge (a->b) point (p) is
+//   w > 0 : p is on left side of the edge
+//   w < 0 : p is on right side of the edge
+//   w == 0 : p is exactly on the edge
+//
 // NOTE: the output of this function needs to be much wider than the input.
 //       - add sign (to indicate which side of the edge the point is on)
 //       - add two values, each calculated by multiplying two values
-// TODO: how can I calculate the precise, required width?
+// TODO: how can I calculate the precise, required bit width?
 // 
 /* verilator lint_off WIDTHEXPAND */
 function signed [20:0] edge_function;
     // ax, ay = edge start point
     // bx, by = edge end point
-    // cx, cy = point being tested
-    input [9:0] ax, ay, bx, by, cx, cy;
+    // px, py = point being tested
+    input [9:0] ax, ay, bx, by, px, py;
     begin
-        edge_function = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+        edge_function = (bx - ax) * (py - ay) - (by - ay) * (px - ax);
     end
 endfunction
 /* verilator lint_on WIDTHEXPAND */
+
+// TODO: precompute edge function coefficients for triangle
+// -> ready for the form EdgeFunction = Ax + By + C
+
+// TODO: barycentric co-ords to interpolate colour across the surface of the triangle
+//   -> Precompute denominator E(A, B, C)
 
 reg signed [20:0] w1;
 reg signed [20:0] w2;
@@ -51,6 +54,8 @@ begin
     if ((w1 >= 0) && (w2 >= 0) && (w3 >= 0))
     begin
         r = 255;
+        g = 255;
+        b = 255;
     end
 end
 
