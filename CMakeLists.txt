@@ -25,3 +25,37 @@ target_link_libraries(Main PRIVATE
     "-framework OpenGL"
     "-framework GLUT"
 )
+
+#
+# GoogleTest
+#
+
+# download google test
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz
+)
+
+# prevent googletest from overriding our compiler/linker options
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+#
+# Unit Tests
+#
+
+add_executable(TestFixedPoint 
+    test/FixedPoint.test.cpp    
+    test/FixedPointAdd.test.cpp    
+    test/FixedPointSub.test.cpp
+    test/FixedPointMultiply.test.cpp
+)
+
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointAdd.v)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointSub.v)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointMultiply.v)
+
+target_link_libraries(TestFixedPoint PRIVATE gtest_main)
