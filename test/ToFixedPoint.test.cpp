@@ -27,3 +27,8 @@ TEST(ToFixedPoint, ShouldSupportPi)
 {
     EXPECT_EQ(803, ToFixedPoint(3.14f));
 }
+
+TEST(ToFixedPoint, ShouldSupportMinusOne)
+{
+    EXPECT_EQ(-(1 << 8), ToFixedPoint(-1.0f));
+}

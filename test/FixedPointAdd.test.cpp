@@ -45,3 +45,32 @@ TEST_F(FixedPointAdd, ShouldAddFractions)
     TestBench.Eval();
     EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
 }
+
+TEST_F(FixedPointAdd, ShouldAddNegativeAndPositive)
+{
+    const float kA = -1.5f;
+    const float kB = 2.25f;
+
+    auto& Module = TestBench.Module;
+    Module.i_a = ToFixedPoint(kA);
+    Module.i_b = ToFixedPoint(kB);
+    
+    TestBench.Eval();
+    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+}
+
+TEST_F(FixedPointAdd, ShouldAddNegativeAndNegative)
+{
+    const float kA = -1.5f;
+    const float kB = -2.25f;
+
+    auto& Module = TestBench.Module;
+    Module.i_a = ToFixedPoint(kA);
+    Module.i_b = ToFixedPoint(kB);
+    
+    TestBench.Eval();
+    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+}
+
+// TODO: helper function for repeated code
+// TODO: add test for max supported values

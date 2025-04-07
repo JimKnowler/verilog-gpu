@@ -20,7 +20,7 @@ TEST_F(FixedPointSub, ShouldConstructTestBench)
     
 }
 
-TEST_F(FixedPointSub, ShouldAddIntegers)
+TEST_F(FixedPointSub, ShouldSubIntegers)
 {
     const float kA = 58.0f;
     const float kB = 45.0f;
@@ -33,7 +33,7 @@ TEST_F(FixedPointSub, ShouldAddIntegers)
     EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
 }
 
-TEST_F(FixedPointSub, ShouldAddFractions)
+TEST_F(FixedPointSub, ShouldSubFractions)
 { 
     const float kA = 0.5f;
     const float kB = 0.25f;
@@ -46,4 +46,47 @@ TEST_F(FixedPointSub, ShouldAddFractions)
     EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
 }
 
-// TODO negative values, negative-positive, positive-negative
+
+TEST_F(FixedPointSub, ShouldSubPositiveAndNegative)
+{ 
+    const float kA = 1.5f;
+    const float kB = -2.25f;
+
+    auto& Module = TestBench.Module;
+    Module.i_a = ToFixedPoint(kA);
+    Module.i_b = ToFixedPoint(kB);
+    
+    TestBench.Eval();
+    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+}
+
+
+TEST_F(FixedPointSub, ShouldSubNegativeAndNegative)
+{ 
+    const float kA = -1.5f;
+    const float kB = -2.25f;
+
+    auto& Module = TestBench.Module;
+    Module.i_a = ToFixedPoint(kA);
+    Module.i_b = ToFixedPoint(kB);
+    
+    TestBench.Eval();
+    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+}
+
+
+TEST_F(FixedPointSub, ShouldGetNegativeResult)
+{ 
+    const float kA = 1.5f;
+    const float kB = 2.25f;
+
+    auto& Module = TestBench.Module;
+    Module.i_a = ToFixedPoint(kA);
+    Module.i_b = ToFixedPoint(kB);
+    
+    TestBench.Eval();
+    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+}
+
+// TODO: helper function for repeated code
+// TODO: add test for max supported values
