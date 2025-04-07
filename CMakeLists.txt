@@ -48,7 +48,8 @@ enable_testing()
 #
 
 add_executable(TestFixedPoint 
-    test/FixedPoint.test.cpp    
+    test/ToFixedPoint.test.cpp    
+    test/FromFixedPoint.test.cpp    
     test/FixedPointAdd.test.cpp    
     test/FixedPointSub.test.cpp
     test/FixedPointMultiply.test.cpp
