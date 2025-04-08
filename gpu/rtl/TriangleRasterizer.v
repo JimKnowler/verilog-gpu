@@ -2,6 +2,7 @@
 
 module TriangleRasterizer (
     // FixedPoint x,y screen location of rasterized pixel
+    // TODO: can we render fractions of screen space pixels?  or should this be plain integer (and convert to fixed point internally)
     input signed [`FIXEDPOINT_WIDTH-1:0] x, y,
 
     // FixedPoint x,y screen location of triangle vertices
@@ -11,21 +12,15 @@ module TriangleRasterizer (
     output reg [7:0] r, g, b
 );
 
-// determine on which side of edge (a->b) point (p) is
-//   w > 0 : p is on left side of the edge
-//   w < 0 : p is on right side of the edge
-//   w == 0 : p is exactly on the edge
-//
-// NOTE: the output of this function needs to be much wider than the input.
-//       - add sign (to indicate which side of the edge the point is on)
-//       - add two values, each calculated by multiplying two values
-// TODO: how can I calculate the precise, required bit width?
-// 
-
-`define EDGEFUNCTION_WIDTH `FIXEDPOINT_WIDTH*2
-
-/* verilator lint_off WIDTHEXPAND */
-function signed [`EDGEFUNCTION_WIDTH-1:0] edge_function;
+/*
+ * function: edge_function
+ * 
+ * determine on which side of edge (a->b) point (p) is
+ *   w > 0 : p is on left side of the edge
+ *   w < 0 : p is on right side of the edge
+ *   w == 0 : p is exactly on the edge
+ */
+function signed [`FIXEDPOINT_WIDTH-1:0] edge_function;
     // ax, ay = edge start point
     // bx, by = edge end point
     // px, py = point being tested
@@ -34,7 +29,6 @@ function signed [`EDGEFUNCTION_WIDTH-1:0] edge_function;
         edge_function = fixed_point_sub(fixed_point_multiply(fixed_point_sub(bx, ax), fixed_point_sub(py, ay)), fixed_point_multiply(fixed_point_sub(by, ay), fixed_point_sub(px, ax)));
     end
 endfunction
-/* verilator lint_on WIDTHEXPAND */
 
 // TODO: precompute edge function coefficients for triangle
 // -> ready for the form EdgeFunction = Ax + By + C
@@ -42,9 +36,9 @@ endfunction
 // TODO: barycentric co-ords to interpolate colour across the surface of the triangle
 //   -> Precompute denominator E(A, B, C)
 
-reg signed [`EDGEFUNCTION_WIDTH-1:0] w1;
-reg signed [`EDGEFUNCTION_WIDTH-1:0] w2;
-reg signed [`EDGEFUNCTION_WIDTH-1:0] w3;
+reg signed [`FIXEDPOINT_WIDTH-1:0] w1;
+reg signed [`FIXEDPOINT_WIDTH-1:0] w2;
+reg signed [`FIXEDPOINT_WIDTH-1:0] w3;
 
 always @(*)
 begin
