@@ -14,7 +14,7 @@ uint32_t ToFixedPoint(float Value)
 template <int kFraction = 8>
 float FromFixedPoint(uint32_t Value)
 {
-    float Result = static_cast<float>(Value) / pow(2, kFraction);
+    float Result = static_cast<float>(static_cast<int32_t>(Value)) / pow(2, kFraction);
 
     return Result;
 }
