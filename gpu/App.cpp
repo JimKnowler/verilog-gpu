@@ -49,12 +49,23 @@ bool App::OnUserCreate()
     // Construct the Verilated model, from VTriangleRasterizer.h generated from Verilating "VTriangleRasterizer.v"
     Rasterizer = new VTriangleRasterizer{Context};
 
-    Rasterizer->v1x = ToFixedPoint(v1.x);
-    Rasterizer->v1y = ToFixedPoint(v1.y);
-    Rasterizer->v2x = ToFixedPoint(v2.x);
-    Rasterizer->v2y = ToFixedPoint(v2.y);
-    Rasterizer->v3x = ToFixedPoint(v3.x);
-    Rasterizer->v3y = ToFixedPoint(v3.y);    
+    Rasterizer->i_v1x = ToFixedPoint(v1.x);
+    Rasterizer->i_v1y = ToFixedPoint(v1.y);
+    Rasterizer->i_v1r = ToFixedPoint(1.0f);
+    Rasterizer->i_v1g = ToFixedPoint(0.0f);
+    Rasterizer->i_v1b = ToFixedPoint(0.0f);
+
+    Rasterizer->i_v2x = ToFixedPoint(v2.x);
+    Rasterizer->i_v2y = ToFixedPoint(v2.y);
+    Rasterizer->i_v2r = ToFixedPoint(0.0f);
+    Rasterizer->i_v2g = ToFixedPoint(1.0f);
+    Rasterizer->i_v2b = ToFixedPoint(0.0f);
+
+    Rasterizer->i_v3x = ToFixedPoint(v3.x);
+    Rasterizer->i_v3y = ToFixedPoint(v3.y);    
+    Rasterizer->i_v3r = ToFixedPoint(0.0f);
+    Rasterizer->i_v3g = ToFixedPoint(0.0f);
+    Rasterizer->i_v3b = ToFixedPoint(1.0f);
 
     return true;
 }
@@ -104,14 +115,14 @@ void App::Update(float DeltaTime)
 
 void App::RasterizePixel(int x, int y)
 {
-    Rasterizer->x = ToFixedPoint(x);
-    Rasterizer->y = ToFixedPoint(y);
+    Rasterizer->i_x = ToFixedPoint(x);
+    Rasterizer->i_y = ToFixedPoint(y);
 
     Rasterizer->eval();
 
-    const int r = Rasterizer->r;
-    const int g = Rasterizer->g;
-    const int b = Rasterizer->b;
+    const int r = Rasterizer->o_r;
+    const int g = Rasterizer->o_g;
+    const int b = Rasterizer->o_b;
 
     const int Index = GetRenderBufferIndex(x, y);
     olc::Pixel& Pixel = RenderBuffer[Index];
