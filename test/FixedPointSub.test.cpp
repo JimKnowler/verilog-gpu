@@ -8,7 +8,7 @@
 #include "VFixedPointSub.h"
 
 #include "TestBench.h"
-#include "FixedPoint.h"
+#include "gpu/FixedPoint.h"
 
 class FixedPointSub : public ::testing::Test {
 public:

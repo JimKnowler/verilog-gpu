@@ -1,7 +1,7 @@
 // GoogleTest
 #include <gtest/gtest.h>
 
-#include "FixedPoint.h"
+#include "gpu/FixedPoint.h"
 
 TEST(FromFixedPoint, ShouldSupportZero)
 {

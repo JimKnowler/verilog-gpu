@@ -8,7 +8,7 @@
 #include "VFixedPointMultiply.h"
 
 #include "TestBench.h"
-#include "FixedPoint.h"
+#include "gpu/FixedPoint.h"
 
 class FixedPointMultiply : public ::testing::Test {
 public:

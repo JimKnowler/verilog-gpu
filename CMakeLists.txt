@@ -19,7 +19,7 @@ endif()
 include_directories(.)
 
 add_executable(Main gpu/App.cpp)
-verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v)
+verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(Main PRIVATE
     "-framework OpenGL"

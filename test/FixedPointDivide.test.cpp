@@ -8,7 +8,7 @@
 #include "VFixedPointDivide.h"
 
 #include "TestBench.h"
-#include "FixedPoint.h"
+#include "gpu/FixedPoint.h"
 
 class FixedPointDivide : public ::testing::Test {
 public:

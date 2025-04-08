@@ -1,11 +1,13 @@
+`include "FixedPoint.vh"
+
 module TriangleRasterizer (
-    // x,y screen location of rasterized pixel
-    input [9:0] x, y,
+    // FixedPoint x,y screen location of rasterized pixel
+    input signed [`FIXEDPOINT_WIDTH-1:0] x, y,
 
-    // x,y screen location of triangle vertices
-    input [9:0] v1x, v1y, v2x, v2y, v3x, v3y,
+    // FixedPoint x,y screen location of triangle vertices
+    input signed [`FIXEDPOINT_WIDTH-1:0] v1x, v1y, v2x, v2y, v3x, v3y,
 
-    // r,g,b colour output of rasterized pixel
+    // Integer r,g,b colour output of rasterized pixel
     output reg [7:0] r, g, b
 );
 
@@ -19,14 +21,17 @@ module TriangleRasterizer (
 //       - add two values, each calculated by multiplying two values
 // TODO: how can I calculate the precise, required bit width?
 // 
+
+`define EDGEFUNCTION_WIDTH `FIXEDPOINT_WIDTH*2
+
 /* verilator lint_off WIDTHEXPAND */
-function signed [20:0] edge_function;
+function signed [`EDGEFUNCTION_WIDTH-1:0] edge_function;
     // ax, ay = edge start point
     // bx, by = edge end point
     // px, py = point being tested
-    input [9:0] ax, ay, bx, by, px, py;
+    input [`FIXEDPOINT_WIDTH-1:0] ax, ay, bx, by, px, py;
     begin
-        edge_function = (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+        edge_function = fixed_point_sub(fixed_point_multiply(fixed_point_sub(bx, ax), fixed_point_sub(py, ay)), fixed_point_multiply(fixed_point_sub(by, ay), fixed_point_sub(px, ax)));
     end
 endfunction
 /* verilator lint_on WIDTHEXPAND */
@@ -37,9 +42,9 @@ endfunction
 // TODO: barycentric co-ords to interpolate colour across the surface of the triangle
 //   -> Precompute denominator E(A, B, C)
 
-reg signed [20:0] w1;
-reg signed [20:0] w2;
-reg signed [20:0] w3;
+reg signed [`EDGEFUNCTION_WIDTH-1:0] w1;
+reg signed [`EDGEFUNCTION_WIDTH-1:0] w2;
+reg signed [`EDGEFUNCTION_WIDTH-1:0] w3;
 
 always @(*)
 begin

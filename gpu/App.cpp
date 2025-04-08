@@ -1,4 +1,5 @@
 #include "App.h"
+#include "FixedPoint.h"
 
 namespace {
     const uint32_t kScreenWidth = 1280;
@@ -48,12 +49,12 @@ bool App::OnUserCreate()
     // Construct the Verilated model, from VTriangleRasterizer.h generated from Verilating "VTriangleRasterizer.v"
     Rasterizer = new VTriangleRasterizer{Context};
 
-    Rasterizer->v1x = v1.x;
-    Rasterizer->v1y = v1.y;
-    Rasterizer->v2x = v2.x;
-    Rasterizer->v2y = v2.y;
-    Rasterizer->v3x = v3.x;
-    Rasterizer->v3y = v3.y;    
+    Rasterizer->v1x = ToFixedPoint(v1.x);
+    Rasterizer->v1y = ToFixedPoint(v1.y);
+    Rasterizer->v2x = ToFixedPoint(v2.x);
+    Rasterizer->v2y = ToFixedPoint(v2.y);
+    Rasterizer->v3x = ToFixedPoint(v3.x);
+    Rasterizer->v3y = ToFixedPoint(v3.y);    
 
     return true;
 }
@@ -103,8 +104,8 @@ void App::Update(float DeltaTime)
 
 void App::RasterizePixel(int x, int y)
 {
-    Rasterizer->x = x;
-    Rasterizer->y = y;
+    Rasterizer->x = ToFixedPoint(x);
+    Rasterizer->y = ToFixedPoint(y);
 
     Rasterizer->eval();
 
