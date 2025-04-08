@@ -53,10 +53,12 @@ add_executable(TestFixedPoint
     test/FixedPointAdd.test.cpp    
     test/FixedPointSub.test.cpp
     test/FixedPointMultiply.test.cpp
+    test/FixedPointDivide.test.cpp
 )
 
 verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)
 verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointSub.v INCLUDE_DIRS gpu/rtl)
 verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointDivide.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestFixedPoint PRIVATE gtest_main)
