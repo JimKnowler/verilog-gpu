@@ -55,8 +55,8 @@ add_executable(TestFixedPoint
     test/FixedPointMultiply.test.cpp
 )
 
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointAdd.v)
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointSub.v)
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointMultiply.v)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointSub.v INCLUDE_DIRS gpu/rtl)
+verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestFixedPoint PRIVATE gtest_main)
