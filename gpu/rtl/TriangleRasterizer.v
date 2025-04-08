@@ -1,16 +1,16 @@
 `include "FixedPoint.vh"
 
 module TriangleRasterizer (
-    // FixedPoint x,y screen location of rasterized pixel
+    // FixedPoint: x,y screen location of rasterized pixel
     // TODO: can we render fractions of screen space pixels?  or should this be plain integer (and convert to fixed point internally)
     input signed [`FIXEDPOINT_WIDTH-1:0] i_x, i_y,
 
-    // FixedPoint x,y screen location & colour of triangle vertices
+    // FixedPoint: x,y screen location & colour of triangle vertices
     input signed [`FIXEDPOINT_WIDTH-1:0] i_v1x, i_v1y, i_v1r, i_v1g, i_v1b,
     input signed [`FIXEDPOINT_WIDTH-1:0] i_v2x, i_v2y, i_v2r, i_v2g, i_v2b,
     input signed [`FIXEDPOINT_WIDTH-1:0] i_v3x, i_v3y, i_v3r, i_v3g, i_v3b,
 
-    // Integer r,g,b colour output of rasterized pixel
+    // Integer: r,g,b colour output of rasterized pixel
     output reg [7:0] o_r, o_g, o_b
 );
 
@@ -34,9 +34,6 @@ endfunction
 
 // TODO: precompute edge function coefficients for triangle
 // -> ready for the form EdgeFunction = Ax + By + C
-
-// TODO: barycentric co-ords to interpolate colour across the surface of the triangle
-//   -> Precompute denominator E(A, B, C)
 
 reg signed [`FIXEDPOINT_WIDTH-1:0] r_w1;
 reg signed [`FIXEDPOINT_WIDTH-1:0] r_w2;
