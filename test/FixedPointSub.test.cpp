@@ -13,6 +13,16 @@
 class FixedPointSub : public ::testing::Test {
 public:
     TestBench<VFixedPointSub> TestBench;
+
+    void HelperTestSub(float A, float B)
+    {
+        auto& Module = TestBench.Module;
+        Module.i_a = ToFixedPoint(A);
+        Module.i_b = ToFixedPoint(B);
+        TestBench.Eval();
+
+        EXPECT_EQ(Module.o_result, ToFixedPoint(A - B));
+    }
 };
 
 TEST_F(FixedPointSub, ShouldConstructTestBench)
@@ -22,71 +32,27 @@ TEST_F(FixedPointSub, ShouldConstructTestBench)
 
 TEST_F(FixedPointSub, ShouldSubIntegers)
 {
-    const float kA = 58.0f;
-    const float kB = 45.0f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+    HelperTestSub(58.0f, 45.0f);
 }
 
 TEST_F(FixedPointSub, ShouldSubFractions)
 { 
-    const float kA = 0.5f;
-    const float kB = 0.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+    HelperTestSub(0.5f, 0.25f);
 }
-
 
 TEST_F(FixedPointSub, ShouldSubPositiveAndNegative)
 { 
-    const float kA = 1.5f;
-    const float kB = -2.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+    HelperTestSub(1.5f, -2.25f);
 }
-
 
 TEST_F(FixedPointSub, ShouldSubNegativeAndNegative)
 { 
-    const float kA = -1.5f;
-    const float kB = -2.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+    HelperTestSub(-1.5f, -2.25f);
 }
-
 
 TEST_F(FixedPointSub, ShouldGetNegativeResult)
-{ 
-    const float kA = 1.5f;
-    const float kB = 2.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA - kB));
+{
+    HelperTestSub(1.5f, 2.25f);
 }
 
-// TODO: helper function for repeated code
 // TODO: add test for max supported values

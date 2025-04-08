@@ -13,6 +13,16 @@
 class FixedPointAdd : public ::testing::Test {
 public:
     TestBench<VFixedPointAdd> TestBench;
+
+    void HelperTestAdd(float A, float B) 
+    {
+        auto& Module = TestBench.Module;
+        Module.i_a = ToFixedPoint(A);
+        Module.i_b = ToFixedPoint(B);
+        TestBench.Eval();
+        
+        EXPECT_EQ(Module.o_result, ToFixedPoint(A + B));
+    }
 };
 
 TEST_F(FixedPointAdd, ShouldConstructTestBench)
@@ -22,55 +32,22 @@ TEST_F(FixedPointAdd, ShouldConstructTestBench)
 
 TEST_F(FixedPointAdd, ShouldAddIntegers)
 {
-    const float kA = 58.0f;
-    const float kB = 45.0f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+    HelperTestAdd(58.0f, 45.0f);
 }
 
 TEST_F(FixedPointAdd, ShouldAddFractions)
 { 
-    const float kA = 0.5f;
-    const float kB = 0.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+    HelperTestAdd(0.5f, 0.25f);
 }
 
 TEST_F(FixedPointAdd, ShouldAddNegativeAndPositive)
 {
-    const float kA = -1.5f;
-    const float kB = 2.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+    HelperTestAdd(-1.5f, 2.25f);
 }
 
 TEST_F(FixedPointAdd, ShouldAddNegativeAndNegative)
 {
-    const float kA = -1.5f;
-    const float kB = -2.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA + kB));
+    HelperTestAdd(-1.5f, -2.25f);
 }
 
-// TODO: helper function for repeated code
 // TODO: add test for max supported values

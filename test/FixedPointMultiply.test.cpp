@@ -13,6 +13,16 @@
 class FixedPointMultiply : public ::testing::Test {
 public:
     TestBench<VFixedPointMultiply> TestBench;
+
+    void HelperTestMultiply(float A, float B)
+    {    
+        auto& Module = TestBench.Module;
+        Module.i_a = ToFixedPoint(A);
+        Module.i_b = ToFixedPoint(B);
+        TestBench.Eval();
+
+        EXPECT_EQ(Module.o_result, ToFixedPoint(A * B));
+    }
 };
 
 TEST_F(FixedPointMultiply, ShouldConstructTestBench)
@@ -22,55 +32,22 @@ TEST_F(FixedPointMultiply, ShouldConstructTestBench)
 
 TEST_F(FixedPointMultiply, ShouldMultiplyIntegers)
 {
-    const float kA = 58.0f;
-    const float kB = 45.0f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA * kB));
+    HelperTestMultiply(58.0f, 45.0f);
 }
 
 TEST_F(FixedPointMultiply, ShouldMultiplyFractions)
 { 
-    const float kA = 0.5f;
-    const float kB = 0.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA * kB));
+    HelperTestMultiply(0.5f, 0.25f);
 }
 
 TEST_F(FixedPointMultiply, ShouldMultiplyPositiveAndNegative)
 { 
-    const float kA = 1.5f;
-    const float kB = -4.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA * kB));
+    HelperTestMultiply(1.5f, -4.25f);
 }
 
 TEST_F(FixedPointMultiply, ShouldMultiplyNegativeAndNegative)
 { 
-    const float kA = -1.5f;
-    const float kB = -4.25f;
-
-    auto& Module = TestBench.Module;
-    Module.i_a = ToFixedPoint(kA);
-    Module.i_b = ToFixedPoint(kB);
-    
-    TestBench.Eval();
-    EXPECT_EQ(Module.o_result, ToFixedPoint(kA * kB));
+    HelperTestMultiply(-1.5f, -4.25f);
 }
 
-// TODO: helper function for repeated code
 // TODO: add test for max supported values
