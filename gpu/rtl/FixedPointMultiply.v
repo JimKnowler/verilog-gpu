@@ -3,14 +3,18 @@ module FixedPointMultiply #(
     parameter FRACTION_WIDTH = 8
 )
 (
-    input [WIDTH-1:0] i_a,
-    input [WIDTH-1:0] i_b,
-    output reg [(WIDTH*2)-1:0] o_result
+    input signed [WIDTH-1:0] i_a,
+    input signed [WIDTH-1:0] i_b,
+    output reg signed [WIDTH-1:0] o_result
 );
 
+reg [(WIDTH*2)-1:0] r_result;
+
 always @(*)
-begin
-    o_result = (i_a * i_b) >> FRACTION_WIDTH;
+begin    
+    r_result = (i_a * i_b);
 end
+
+assign o_result = r_result[(WIDTH-1) + FRACTION_WIDTH:FRACTION_WIDTH];
 
 endmodule
