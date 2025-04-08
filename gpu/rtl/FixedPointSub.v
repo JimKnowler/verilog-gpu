@@ -2,9 +2,9 @@ module FixedPointSub #(
     parameter WIDTH = 32
 )
 (
-    input [WIDTH-1:0] i_a,
-    input [WIDTH-1:0] i_b,
-    output reg [WIDTH-1:0] o_result
+    input signed [WIDTH-1:0] i_a,
+    input signed [WIDTH-1:0] i_b,
+    output reg signed [WIDTH-1:0] o_result
 );
 
 always @(*)

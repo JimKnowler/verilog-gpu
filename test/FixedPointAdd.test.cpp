@@ -45,9 +45,12 @@ TEST_F(FixedPointAdd, ShouldAddNegativeAndPositive)
     HelperTestAdd(-1.5f, 2.25f);
 }
 
+TEST_F(FixedPointAdd, ShouldAddPostiveAndNegative)
+{
+    HelperTestAdd(1.5f, -2.25f);
+}
+
 TEST_F(FixedPointAdd, ShouldAddNegativeAndNegative)
 {
     HelperTestAdd(-1.5f, -2.25f);
 }
-
-// TODO: add test for max supported values

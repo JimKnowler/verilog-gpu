@@ -45,6 +45,11 @@ TEST_F(FixedPointSub, ShouldSubPositiveAndNegative)
     HelperTestSub(1.5f, -2.25f);
 }
 
+TEST_F(FixedPointSub, ShouldSubNegativeAndPositive)
+{ 
+    HelperTestSub(-1.5f, 2.25f);
+}
+
 TEST_F(FixedPointSub, ShouldSubNegativeAndNegative)
 { 
     HelperTestSub(-1.5f, -2.25f);
@@ -54,5 +59,3 @@ TEST_F(FixedPointSub, ShouldGetNegativeResult)
 {
     HelperTestSub(1.5f, 2.25f);
 }
-
-// TODO: add test for max supported values

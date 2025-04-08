@@ -49,5 +49,3 @@ TEST_F(FixedPointMultiply, ShouldMultiplyNegativeAndNegative)
 { 
     HelperTestMultiply(-1.5f, -4.25f);
 }
-
-// TODO: add test for max supported values
