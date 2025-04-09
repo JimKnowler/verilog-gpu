@@ -47,18 +47,23 @@ enable_testing()
 # Unit Tests
 #
 
-add_executable(TestFixedPoint 
+add_executable(TestRtl
     test/ToFixedPoint.test.cpp    
     test/FromFixedPoint.test.cpp    
     test/FixedPointAdd.test.cpp    
     test/FixedPointSub.test.cpp
     test/FixedPointMultiply.test.cpp
     test/FixedPointDivide.test.cpp
+    test/MatrixMultiplyVertex.test.cpp
+    gpu/Matrix.cpp
 )
 
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointSub.v INCLUDE_DIRS gpu/rtl)
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
-verilate(TestFixedPoint SOURCES gpu/rtl/FixedPointDivide.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/FixedPointSub.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/FixedPointDivide.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/MatrixMultiplyVertex.v INCLUDE_DIRS gpu/rtl)
 
-target_link_libraries(TestFixedPoint PRIVATE gtest_main)
+target_link_libraries(TestRtl PRIVATE gtest_main)
+
+add_test(NAME TestRtl COMMAND TestRtl)
