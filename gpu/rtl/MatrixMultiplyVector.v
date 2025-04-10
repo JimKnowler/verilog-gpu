@@ -32,10 +32,13 @@ function Vector4_t matrix_multiply_vector;
     input Vector4_t v;
 
     begin
-        matrix_multiply_vector.x = vector_dot_product(m.rows[0], v);
-        matrix_multiply_vector.y = vector_dot_product(m.rows[1], v);
-        matrix_multiply_vector.z = vector_dot_product(m.rows[2], v);
-        matrix_multiply_vector.w = vector_dot_product(m.rows[3], v);
+        // NOTE: row order is reversed here
+        //       JK: is this because rows are specified as [3:0] ?
+        //       JK: is it better to reverse here, or in C++ ?
+        matrix_multiply_vector.x = vector_dot_product(m.rows[3], v);
+        matrix_multiply_vector.y = vector_dot_product(m.rows[2], v);
+        matrix_multiply_vector.z = vector_dot_product(m.rows[1], v);
+        matrix_multiply_vector.w = vector_dot_product(m.rows[0], v);
     end
 endfunction
 
