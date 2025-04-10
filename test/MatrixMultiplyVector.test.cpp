@@ -56,6 +56,18 @@ public:
         EXPECT_NEAR(Expected.Z, Actual.Z, kLambda);
         EXPECT_NEAR(Expected.W, Actual.W, kLambda);
     }
+
+    void HelperTestMultiplyVector(const FMatrix44& Matrix, const FVector4& Vector, const FVector4& Expected)
+    {
+        auto& Module = TestBench.Module;
+        HelperSetFixedPointMatrix(Module.i_matrix, Matrix);    
+        HelperSetFixedPointVector(Module.i_vector, Vector);
+        
+        TestBench.Eval();
+
+        const FVector4 Result = HelperGetFixedPointVector(Module.o_vector);
+        HelperExpectEq(Result, Expected);
+    }
 };
 
 TEST_F(MatrixMultiplyVector, ShouldConstructTestBench)
@@ -68,31 +80,14 @@ TEST_F(MatrixMultiplyVector, ShouldConstructTestBench)
 
 TEST_F(MatrixMultiplyVector, ShouldMultiplyByZero)
 {
-    auto& Module = TestBench.Module;
-
-    HelperSetFixedPointMatrix(Module.i_matrix, FMatrix44::Zero());    
-    
     const FVector4 kVector(1.0f, 2.0f, 3.0f, 4.0f);
-    HelperSetFixedPointVector(Module.i_vector, kVector);
-    
-    TestBench.Eval();
 
-    const FVector4 Result = HelperGetFixedPointVector(Module.o_vector);
-    const FVector4 Expected = FVector4::Zero();
-    HelperExpectEq(Result, Expected);
+    HelperTestMultiplyVector(FMatrix44::Zero(), kVector, FVector4::Zero());
 }
 
 TEST_F(MatrixMultiplyVector, ShouldMultiplyByIdentity)
 {
-    auto& Module = TestBench.Module;
-
-    HelperSetFixedPointMatrix(Module.i_matrix, FMatrix44::Identity());    
-    
     const FVector4 kVector(1.0f, 2.0f, 3.0f, 4.0f);
-    HelperSetFixedPointVector(Module.i_vector, kVector);
 
-    TestBench.Eval();
-
-    const FVector4 Result = HelperGetFixedPointVector(Module.o_vector);
-    HelperExpectEq(Result, kVector);
+    HelperTestMultiplyVector(FMatrix44::Identity(), kVector, kVector);
 }
