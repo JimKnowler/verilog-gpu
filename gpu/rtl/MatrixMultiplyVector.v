@@ -1,5 +1,5 @@
 /**
- * Apply a matrix to a vertex
+ * Apply a Matrix to a Vector
  */
 
 `include "FixedPoint.vh"
@@ -27,25 +27,25 @@ function signed [`FIXEDPOINT_WIDTH-1:0] vector_dot_product;
     end
 endfunction
 
-function Vector4_t matrix_multiply_vertex;
+function Vector4_t matrix_multiply_vector;
     input Matrix44_t m;
     input Vector4_t v;
 
     begin
-        matrix_multiply_vertex.x = vector_dot_product(m.rows[0], v);
-        matrix_multiply_vertex.y = vector_dot_product(m.rows[1], v);
-        matrix_multiply_vertex.z = vector_dot_product(m.rows[2], v);
-        matrix_multiply_vertex.w = vector_dot_product(m.rows[3], v);
+        matrix_multiply_vector.x = vector_dot_product(m.rows[0], v);
+        matrix_multiply_vector.y = vector_dot_product(m.rows[1], v);
+        matrix_multiply_vector.z = vector_dot_product(m.rows[2], v);
+        matrix_multiply_vector.w = vector_dot_product(m.rows[3], v);
     end
 endfunction
 
-module MatrixMultiplyVertex ( 
+module MatrixMultiplyVector ( 
     input Matrix44_t i_matrix,
-    input Vector4_t i_vertex,
-    output Vector4_t o_vertex
+    input Vector4_t i_vector,
+    output Vector4_t o_vector
 );
     always @(*)
     begin
-        o_vertex = matrix_multiply_vertex(i_matrix, i_vertex);
+        o_vector = matrix_multiply_vector(i_matrix, i_vector);
     end
 endmodule
