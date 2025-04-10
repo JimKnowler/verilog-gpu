@@ -35,13 +35,16 @@ function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_divide;
     input signed [`FIXEDPOINT_WIDTH-1:0] a, b;
     
     begin
-        reg signed [(`FIXEDPOINT_WIDTH + `FIXEDPOINT_FRACTION)-1:0] r_a;
         reg signed [(`FIXEDPOINT_WIDTH + `FIXEDPOINT_FRACTION)-1:0] r_a_shifted;
-        reg signed [(`FIXEDPOINT_WIDTH + `FIXEDPOINT_FRACTION)-1:0] r_result;
-        
-        r_a = {`FIXEDPOINT_FRACTION'b0, a};
-        r_a_shifted = r_a <<< `FIXEDPOINT_FRACTION;
-        r_result = r_a_shifted / {`FIXEDPOINT_FRACTION'b0, b};
+        reg signed [(`FIXEDPOINT_WIDTH + `FIXEDPOINT_FRACTION)-1:0] r_result;      
+
+        // NOTE: if we return to padding MSB of a or b, then be careful with these signed numbers to expand 
+        //       them with their sign bits
+
+        r_a_shifted = a <<< `FIXEDPOINT_FRACTION;
+        /* verilator lint_off WIDTHEXPAND */
+        r_result = r_a_shifted / b;
+        /* verilator lint_on WIDTHEXPAND */
                 
         fixed_point_divide = r_result[`FIXEDPOINT_WIDTH-1:0];
     end
