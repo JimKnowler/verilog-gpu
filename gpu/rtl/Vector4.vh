@@ -31,3 +31,18 @@ function Vector4_t vector_add_vector;
         vector_add_vector.w = a.w + b.w;
     end
 endfunction
+
+/**
+ * 4d Vector Multiply
+ */
+function Vector4_t vector_multiply_scalar;
+    input Vector4_t a;
+    input signed [`FIXEDPOINT_WIDTH-1:0] scalar;
+
+    begin
+        vector_multiply_scalar.x = fixed_point_multiply(a.x, scalar);
+        vector_multiply_scalar.y = fixed_point_multiply(a.y, scalar);
+        vector_multiply_scalar.z = fixed_point_multiply(a.z, scalar);
+        vector_multiply_scalar.w = fixed_point_multiply(a.w, scalar);
+    end
+endfunction

@@ -17,6 +17,8 @@ struct FVector4
     float Dot(const FVector4& Other) const;
 
     FVector4 operator+(const FVector4& Other) const;
+
+    FVector4 operator*(float Scalar) const;
 };
 
 /**
