@@ -58,6 +58,7 @@ add_executable(TestRtl
     test/VectorDotProduct.test.cpp
     test/VectorAddVector.test.cpp
     test/VectorMultiplyScalar.test.cpp
+    test/VectorDivideScalar.test.cpp
     gpu/Matrix.cpp
 )
 
@@ -69,6 +70,7 @@ verilate(TestRtl SOURCES gpu/rtl/MatrixMultiplyVector.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorDotProduct.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorAddVector.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorMultiplyScalar.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/VectorDivideScalar.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 

@@ -46,3 +46,18 @@ function Vector4_t vector_multiply_scalar;
         vector_multiply_scalar.w = fixed_point_multiply(a.w, scalar);
     end
 endfunction
+
+/**
+ * 4d Vector Divide
+ */
+function Vector4_t vector_divide_scalar;
+    input Vector4_t a;
+    input signed [`FIXEDPOINT_WIDTH-1:0] scalar;
+
+    begin
+        vector_divide_scalar.x = fixed_point_divide(a.x, scalar);
+        vector_divide_scalar.y = fixed_point_divide(a.y, scalar);
+        vector_divide_scalar.z = fixed_point_divide(a.z, scalar);
+        vector_divide_scalar.w = fixed_point_divide(a.w, scalar);
+    end
+endfunction
