@@ -60,6 +60,7 @@ TEST_F(VectorMultiplyScalar, ShouldConstructTestBench)
 {
     auto& Module = TestBench.Module;
     EXPECT_EQ(Module.i_a.size(), 4);
+    EXPECT_EQ(Module.o_result.size(), 4);
 }
 
 TEST_F(VectorMultiplyScalar, ShouldMultiplyByZero)
