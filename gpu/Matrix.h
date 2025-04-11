@@ -15,6 +15,8 @@ struct FVector4
     static const FVector4& Zero();
 
     float Dot(const FVector4& Other) const;
+
+    FVector4 operator+(const FVector4& Other) const;
 };
 
 /**

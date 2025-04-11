@@ -56,6 +56,7 @@ add_executable(TestRtl
     test/FixedPointDivide.test.cpp
     test/MatrixMultiplyVector.test.cpp
     test/VectorDotProduct.test.cpp
+    test/VectorAddVector.test.cpp
     gpu/Matrix.cpp
 )
 
@@ -65,6 +66,7 @@ verilate(TestRtl SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/FixedPointDivide.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/MatrixMultiplyVector.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorDotProduct.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/VectorAddVector.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 

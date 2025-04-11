@@ -42,6 +42,11 @@ float FVector4::Dot(const FVector4 &Other) const
     return (X * Other.X) + (Y * Other.Y) + (Z * Other.Z) + (W * Other.W);
 }
 
+FVector4 FVector4::operator+(const FVector4 &Other) const
+{
+    return FVector4(X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W);
+}
+
 FMatrix44::FMatrix44(const FVector4& Row0, const FVector4& Row1, const FVector4& Row2, const FVector4& Row3)
 {
     Rows[0] = Row0;
