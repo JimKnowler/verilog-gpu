@@ -13,6 +13,8 @@ struct FVector4
     FVector4(float _X, float _Y, float _Z, float _W);
 
     static const FVector4& Zero();
+
+    float Dot(const FVector4& Other) const;
 };
 
 /**
