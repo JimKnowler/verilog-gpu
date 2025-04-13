@@ -3,12 +3,12 @@
 module TriangleRasterizer (
     // FixedPoint: x,y screen location of rasterized pixel
     // TODO: can we render fractions of screen space pixels?  or should this be plain integer (and convert to fixed point internally)
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_x, i_y,
+    input `FixedPoint_t i_x, i_y,
 
     // FixedPoint: x,y screen location & colour of triangle vertices
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_v1x, i_v1y, i_v1r, i_v1g, i_v1b,
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_v2x, i_v2y, i_v2r, i_v2g, i_v2b,
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_v3x, i_v3y, i_v3r, i_v3g, i_v3b,
+    input `FixedPoint_t i_v1x, i_v1y, i_v1r, i_v1g, i_v1b,
+    input `FixedPoint_t i_v2x, i_v2y, i_v2r, i_v2g, i_v2b,
+    input `FixedPoint_t i_v3x, i_v3y, i_v3r, i_v3g, i_v3b,
 
     // Integer: r,g,b colour output of rasterized pixel
     output reg [7:0] o_r, o_g, o_b
@@ -22,11 +22,11 @@ module TriangleRasterizer (
  *   w < 0 : p is on right side of the edge
  *   w == 0 : p is exactly on the edge
  */
-function signed [`FIXEDPOINT_WIDTH-1:0] edge_function;
+function `FixedPoint_t edge_function;
     // ax, ay = edge start point
     // bx, by = edge end point
     // px, py = point being tested
-    input [`FIXEDPOINT_WIDTH-1:0] ax, ay, bx, by, px, py;
+    input `FixedPoint_t ax, ay, bx, by, px, py;
     begin
         edge_function = fixed_point_sub(fixed_point_multiply(fixed_point_sub(bx, ax), fixed_point_sub(py, ay)), fixed_point_multiply(fixed_point_sub(by, ay), fixed_point_sub(px, ax)));
     end
@@ -35,13 +35,13 @@ endfunction
 // TODO: precompute edge function coefficients for triangle
 // -> ready for the form EdgeFunction = Ax + By + C
 
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w1;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w2;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w3;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_area;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w1_norm;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w2_norm;
-reg signed [`FIXEDPOINT_WIDTH-1:0] r_w3_norm;
+reg `FixedPoint_t r_w1;
+reg `FixedPoint_t r_w2;
+reg `FixedPoint_t r_w3;
+reg `FixedPoint_t r_area;
+reg `FixedPoint_t r_w1_norm;
+reg `FixedPoint_t r_w2_norm;
+reg `FixedPoint_t r_w3_norm;
 
 always @(*)
 begin

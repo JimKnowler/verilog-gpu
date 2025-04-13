@@ -2,7 +2,7 @@
 
 module VectorDivideScalar (
     input Vector4_t i_a,
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_scalar,
+    input `FixedPoint_t i_scalar,
     output Vector4_t o_result
 );
     always @(*)

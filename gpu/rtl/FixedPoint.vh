@@ -4,24 +4,26 @@
 `define FIXEDPOINT_WIDTH 32
 `define FIXEDPOINT_FRACTION 8
 
-function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_add;
-    input signed [`FIXEDPOINT_WIDTH-1:0] a, b;
+`define FixedPoint_t signed [`FIXEDPOINT_WIDTH-1:0]
+
+function `FixedPoint_t fixed_point_add;
+    input `FixedPoint_t a, b;
     
     begin
         fixed_point_add = a + b;
     end
 endfunction
 
-function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_sub;
-    input signed [`FIXEDPOINT_WIDTH-1:0] a, b;
+function `FixedPoint_t fixed_point_sub;
+    input `FixedPoint_t a, b;
     
     begin
         fixed_point_sub = a - b;
     end
 endfunction
 
-function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_multiply;
-    input signed [`FIXEDPOINT_WIDTH-1:0] a, b;
+function `FixedPoint_t fixed_point_multiply;
+    input `FixedPoint_t a, b;
     
     begin
         reg [(`FIXEDPOINT_WIDTH*2)-1:0] r_result;
@@ -31,8 +33,8 @@ function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_multiply;
     end
 endfunction
 
-function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_divide;
-    input signed [`FIXEDPOINT_WIDTH-1:0] a, b;
+function `FixedPoint_t fixed_point_divide;
+    input `FixedPoint_t a, b;
     
     begin
         reg signed [(`FIXEDPOINT_WIDTH + `FIXEDPOINT_FRACTION)-1:0] r_a_shifted;
@@ -51,17 +53,17 @@ function signed [`FIXEDPOINT_WIDTH-1:0] fixed_point_divide;
 endfunction
 
 function [7:0] fixed_point_to_uint8;
-    input signed [`FIXEDPOINT_WIDTH-1:0] a;
+    input `FixedPoint_t a;
 
     begin
-        reg signed [`FIXEDPOINT_WIDTH-1:0] a_shifted;
+        reg `FixedPoint_t a_shifted;
         a_shifted = a >>> `FIXEDPOINT_FRACTION;
 
         fixed_point_to_uint8 = a_shifted[7:0];
     end
 endfunction
 
-function [`FIXEDPOINT_WIDTH-1:0] uint8_to_fixed_point;
+function `FixedPoint_t uint8_to_fixed_point;
     input signed [7:0] a;
 
     begin

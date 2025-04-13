@@ -4,13 +4,13 @@
  * 4d Vector
  */
 typedef struct packed {
-    logic signed [`FIXEDPOINT_WIDTH-1:0] x, y, z, w;
+    logic `FixedPoint_t x, y, z, w;
 } Vector4_t;
 
 /**
  * 4d Vector Dot Product
  */
-function signed [`FIXEDPOINT_WIDTH-1:0] vector_dot_product;
+function `FixedPoint_t vector_dot_product;
     input Vector4_t a, b;
 
     begin
@@ -37,7 +37,7 @@ endfunction
  */
 function Vector4_t vector_multiply_scalar;
     input Vector4_t a;
-    input signed [`FIXEDPOINT_WIDTH-1:0] scalar;
+    input `FixedPoint_t scalar;
 
     begin
         vector_multiply_scalar.x = fixed_point_multiply(a.x, scalar);
@@ -52,7 +52,7 @@ endfunction
  */
 function Vector4_t vector_divide_scalar;
     input Vector4_t a;
-    input signed [`FIXEDPOINT_WIDTH-1:0] scalar;
+    input `FixedPoint_t scalar;
 
     begin
         vector_divide_scalar.x = fixed_point_divide(a.x, scalar);

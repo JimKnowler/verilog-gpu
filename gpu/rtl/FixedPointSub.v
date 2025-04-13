@@ -1,9 +1,9 @@
 `include "FixedPoint.vh"
 
 module FixedPointSub (
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_a,
-    input signed [`FIXEDPOINT_WIDTH-1:0] i_b,
-    output reg signed [`FIXEDPOINT_WIDTH-1:0] o_result
+    input `FixedPoint_t i_a,
+    input `FixedPoint_t i_b,
+    output reg `FixedPoint_t o_result
 );
 
 always @(*)
