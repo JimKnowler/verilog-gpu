@@ -36,11 +36,10 @@ public:
 
     void HelperExpectEq(const FVector4& Expected, const FVector4& Actual) 
     {
-        constexpr float kLambda = 0.005f;
-        EXPECT_NEAR(Expected.X, Actual.X, kLambda);
-        EXPECT_NEAR(Expected.Y, Actual.Y, kLambda);
-        EXPECT_NEAR(Expected.Z, Actual.Z, kLambda);
-        EXPECT_NEAR(Expected.W, Actual.W, kLambda);
+        EXPECT_NEAR(Expected.X, Actual.X, kFixedPointLambda);
+        EXPECT_NEAR(Expected.Y, Actual.Y, kFixedPointLambda);
+        EXPECT_NEAR(Expected.Z, Actual.Z, kFixedPointLambda);
+        EXPECT_NEAR(Expected.W, Actual.W, kFixedPointLambda);
     }
 
     void HelperTestVectorDivideScalar(const FVector4& A, const float Scalar)

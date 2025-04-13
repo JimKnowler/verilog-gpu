@@ -3,6 +3,9 @@
 #include <cinttypes>
 #include <math.h>
 
+// accuracy for unit tests
+constexpr float kFixedPointLambda = 0.005f;
+
 template <int kFraction = 8>
 uint32_t ToFixedPoint(float Value)
 {

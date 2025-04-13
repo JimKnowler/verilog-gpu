@@ -32,9 +32,7 @@ public:
         TestBench.Eval();
 
         const float Result = FromFixedPoint(Module.o_result);
-        const float kLambda = 0.005f;
-
-        EXPECT_NEAR(Expected, Result, kLambda);
+        EXPECT_NEAR(Expected, Result, kFixedPointLambda);
     }
 };
 
