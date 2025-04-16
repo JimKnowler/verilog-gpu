@@ -74,12 +74,28 @@ struct FMatrix44
     FMatrix44 operator*(const FMatrix44& Other);
 
     /**
+     * @brief Access a Row in the matrix
+     * 
+     * @param Index of the row to access
+     * @return FVector4 of the requested Row
+     */
+    FVector4& operator[](int Index);
+
+    /**
+     * @brief Access a Row in the matrix
+     * 
+     * @param Index of the row to access
+     * @return FVector4 of the requested Row
+     */
+    const FVector4& operator[](int Index) const;
+
+    /**
      * @brief Retrieve a column from the matrix
      * 
      * @param Index The index of the column 
      * @return FVector4 
      */
-    FVector4 Column(int Index);
+    FVector4 Column(int Index) const;
 
     /**
      * @brief Get a matrix full of zeros

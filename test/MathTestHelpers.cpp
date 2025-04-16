@@ -14,6 +14,29 @@ void HelperExpectEq(const FVector4& Expected, const FVector4& Actual)
     EXPECT_NEAR(Expected.W, Actual.W, kLambda);
 }
 
+void HelperExpectEq(const FMatrix44& Expected, const FMatrix44& Actual)
+{
+    {
+        SCOPED_TRACE("Row 0");
+        HelperExpectEq(Expected[0], Actual[0]);
+    }
+
+    {
+        SCOPED_TRACE("Row 1");
+        HelperExpectEq(Expected[1], Actual[1]);
+    }
+
+    {
+        SCOPED_TRACE("Row 2");
+        HelperExpectEq(Expected[2], Actual[2]);
+    }
+
+    {
+        SCOPED_TRACE("Row 3");
+        HelperExpectEq(Expected[3], Actual[3]);
+    }
+}
+
 void HelperSetFixedPointVector(VlWide<4UL>& FixedPointVector, const FVector4& Vector)
 {        
     FixedPointVector.at(0) = ToFixedPoint(Vector.X);

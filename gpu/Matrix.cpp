@@ -96,14 +96,24 @@ FMatrix44 FMatrix44::operator*(const FMatrix44 &Other)
     {
         for (int j=0; j<4; j++)
         {
-            M.Rows[i][j] = Rows[i].Dot(Column(j));
+            M.Rows[i][j] = Rows[i].Dot(Other.Column(j));
         }
     }
 
     return M;
 }
 
-FVector4 FMatrix44::Column(int Index)
+FVector4 &FMatrix44::operator[](int Index)
+{
+    return Rows[Index];
+}
+
+const FVector4 &FMatrix44::operator[](int Index) const
+{
+    return Rows[Index];
+}
+
+FVector4 FMatrix44::Column(int Index) const
 {
     return FVector4(Rows[0][Index], Rows[1][Index], Rows[2][Index], Rows[3][Index]);
 }

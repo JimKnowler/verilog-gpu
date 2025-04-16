@@ -60,6 +60,7 @@ add_executable(TestRtl
     test/VectorAddVector.test.cpp
     test/VectorMultiplyScalar.test.cpp
     test/VectorDivideScalar.test.cpp
+    test/Matrix.test.cpp
     gpu/Matrix.cpp
 )
 

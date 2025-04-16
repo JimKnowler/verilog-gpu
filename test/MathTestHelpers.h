@@ -7,6 +7,8 @@
 
 void HelperExpectEq(const FVector4& Expected, const FVector4& Actual);
 
+void HelperExpectEq(const FMatrix44& Expected, const FMatrix44& Actual);
+
 void HelperSetFixedPointVector(VlWide<4UL>& FixedPointVector, const FVector4& Vector);
 
 FVector4 HelperGetFixedPointVector(const VlWide<4UL>& FixedPointVector);
