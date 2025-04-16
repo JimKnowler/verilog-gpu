@@ -54,6 +54,7 @@ add_executable(TestRtl
     test/FixedPointSub.test.cpp
     test/FixedPointMultiply.test.cpp
     test/FixedPointDivide.test.cpp
+    test/MathTestHelpers.cpp
     test/MatrixMultiplyVector.test.cpp
     test/VectorDotProduct.test.cpp
     test/VectorAddVector.test.cpp

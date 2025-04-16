@@ -10,18 +10,11 @@
 #include "TestBench.h"
 #include "gpu/FixedPoint.h"
 #include "gpu/Matrix.h"
+#include "MathTestHelpers.h"
 
 class VectorDotProduct : public ::testing::Test {
 public:
     TestBench<VVectorDotProduct> TestBench;
-
-    void HelperSetFixedPointVector(VlWide<4UL>& FixedPointVector, const FVector4& Vector)
-    {        
-        FixedPointVector.at(0) = ToFixedPoint(Vector.X);
-        FixedPointVector.at(1) = ToFixedPoint(Vector.Y);
-        FixedPointVector.at(2) = ToFixedPoint(Vector.Z);
-        FixedPointVector.at(3) = ToFixedPoint(Vector.W);
-    }
 
     void HelperTestVectorDotProduct(const FVector4& A, const FVector4& B, const float Expected)
     {
