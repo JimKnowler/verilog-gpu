@@ -155,8 +155,8 @@ struct FMatrix44
      * @brief Create a View Transform
      * 
      * @param Eye Location of the Camera
-     * @param Center The target point (what we're looking at)
-     * @param Up The up direction of the camera
+     * @param Center Location of the target point (what we're looking at)
+     * @param Up The camera's up direction
      * 
      * @return Matrix that transforms points from world space to view space
      */

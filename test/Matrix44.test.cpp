@@ -97,6 +97,84 @@ TEST(Matrix, ShouldTranslatePoint)
     HelperExpectEq(Expected, Result);
 }
 
+TEST(Matrix, ShouldConcatenateRotationAndTranslationMatrices)
+{
+    // Rotate Point, and then translate it
+    const FMatrix44 Matrix = FMatrix44::Translation(-1, 0, 0) * FMatrix44::RotateZ(M_PI_2);
+    const FVector4 Point(0.0f, 1.0f, 0.0f, 1.0f);
+    const FVector4 Result = Matrix * Point;
+    const FVector4 Expected(-2.0f, 0.0f, 0.0f, 1.0f);
+    HelperExpectEq(Expected, Result);
+}
+
+TEST(Matrix, ShouldLookAt_CenterPoint_FromOrigin)
+{
+    // Camera
+    const FVector4 Eye(0.0f, 0.0f, 0.0f, 1.0f);
+    const FVector4 Center(0.0f, 0.0f, -1.0f, 1.0f);
+    const FVector4 Up(0.0f, 1.0f, 0.0f, 0.0f);
+
+    // Test Point - use the point that we're looking at
+    const FVector4 Point = Center;
+    const FVector4 Result = FMatrix44::LookAt(Eye, Center, Up) * Point;
+    const FVector4 Expected = Point;
+    HelperExpectEq(Expected, Result);
+}
+
+TEST(Matrix, ShouldLookAt_AboveCenterPoint_FromOrigin)
+{
+    // Camera
+    const FVector4 Eye(0.0f, 0.0f, 0.0f, 1.0f);
+    const FVector4 Center(0.0f, 0.0f, -1.0f, 1.0f);
+    const FVector4 Up(0.0f, 1.0f, 0.0f, 0.0f);
+
+    // Test Point - a point above the Center
+    const FVector4 Point = Center + Up;
+    const FVector4 Result = FMatrix44::LookAt(Eye, Center, Up) * Point;
+    const FVector4 Expected = Point;
+    HelperExpectEq(Expected, Result);
+}
+
+TEST(Matrix, ShouldLookAt_CenterPoint_FromPointAlongZAxis)
+{
+    // Camera
+    const FVector4 Eye(0.0f, 0.0f, 1.0f, 1.0f);
+    const FVector4 Center(0.0f, 0.0f, -1.0f, 1.0f);
+    const FVector4 Up(0.0f, 1.0f, 0.0f, 0.0f);
+
+    // Test Point - use the point that we're looking at
+    const FVector4 Point = Center;
+    const FVector4 Result = FMatrix44::LookAt(Eye, Center, Up) * Point;
+    const FVector4 Expected(0.0f, 0.0f, -2.0f, 1.0f);
+    HelperExpectEq(Expected, Result);
+}
+
+TEST(Matrix, ShouldLookAt_AboveCenterPoint_FromOrigin_WithRotatedUp)
+{
+    // Camera
+    const FVector4 Eye(0.0f, 0.0f, 0.0f, 1.0f);
+    const FVector4 Center(0.0f, 0.0f, -1.0f, 1.0f);
+    const FVector4 Up(1.0f, 0.0f, 0.0f, 0.0f);      // rotated UP axis
+
+    // Test Point - a point above the Center
+    const FVector4 Point(0.0f, 1.0f, -1.0f, 1.0f);
+    const FVector4 Result = FMatrix44::LookAt(Eye, Center, Up) * Point;
+    const FVector4 Expected(-1.0f, 0.0f, -1.0f, 1.0f);
+    HelperExpectEq(Expected, Result);
+}
+
+TEST(Matrix, ShouldLookAt_ArbitraryPoint_FromArbitraryPoint_WithRotatedUp)
+{
+    // Camera
+    const FVector4 Eye(0.0f, 1.0f, 0.0f, 1.0f);
+    const FVector4 Center(1.0f, 1.0f, 0.0f, 1.0f);      // looking along x axis
+    const FVector4 Up(0.0f, 0.0f, 1.0f, 0.0f);          // Z axis is up
+
+    const FVector4 Point(2.0f, 4.0f, 6.0f, 1.0f);
+    const FVector4 Result = FMatrix44::LookAt(Eye, Center, Up) * Point;
+    const FVector4 Expected(-3.0f, 6.0f, -2.0f, 1.0f);
+    HelperExpectEq(Expected, Result);
+}
+
 // TODO: projection (with divide by W for homogenous co-ordinates)
-// TODO: camera view (does this require inversion?)
-// TODO: concatenate matrices
+// TODO: concatenate camera and projection matrices
