@@ -3,7 +3,9 @@
 #include "Vector4.h"
 
 /**
- * @brief Row-Major storage of 4x4 matrix
+ * @brief 4x4 matrix
+ * 
+ * @note Uses Row-Major Order storage
  * 
  */
 struct FMatrix44 
@@ -147,5 +149,17 @@ struct FMatrix44
      * @return FMatrix44 
      */
     static FMatrix44 RotateX(float Radians);
+
+
+    /**
+     * @brief Create a View Transform
+     * 
+     * @param Eye Location of the Camera
+     * @param Center The target point (what we're looking at)
+     * @param Up The up direction of the camera
+     * 
+     * @return Matrix that transforms points from world space to view space
+     */
+    static FMatrix44 LookAt(const FVector4& Eye, const FVector4& Center, const FVector4& Up);
 };
 

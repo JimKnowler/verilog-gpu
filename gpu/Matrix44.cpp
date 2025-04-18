@@ -1,6 +1,7 @@
 #include "Matrix44.h"
 
 #include <math.h>
+#include <assert.h>
 
 namespace 
 {
@@ -152,4 +153,30 @@ FMatrix44 FMatrix44::RotateX(float Radians)
     Matrix.Rows[2].Z = cosf(Radians);
 
     return Matrix;
+}
+
+FMatrix44 FMatrix44::LookAt(const FVector4& Eye, const FVector4& Center, const FVector4& Up)
+{
+    assert(Eye.IsPoint());
+    assert(Center.IsPoint());
+    assert(Up.IsDirection());
+
+    const FVector4 ZAxis = (Eye - Center).Normalise();                  // Backwards
+    const FVector4 XAxis = (Up.CrossProduct(ZAxis)).Normalise();        // Right
+    const FVector4 YAxis = ZAxis.CrossProduct(XAxis);                   // Up
+
+    // Rotation
+    FMatrix44 View(
+        XAxis,
+        YAxis,
+        ZAxis,
+        FVector4(0.0f, 0.0f, 0.0f, 1.0f)
+    );
+
+    // Translation
+    View[0].W = -(XAxis.Dot(Eye));
+    View[1].W = -(YAxis.Dot(Eye));
+    View[2].W = -(ZAxis.Dot(Eye));
+
+    return View;
 }
