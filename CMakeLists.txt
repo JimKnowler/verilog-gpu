@@ -60,8 +60,9 @@ add_executable(TestRtl
     test/VectorAddVector.test.cpp
     test/VectorMultiplyScalar.test.cpp
     test/VectorDivideScalar.test.cpp
-    test/Matrix.test.cpp
-    gpu/Matrix.cpp
+    test/Matrix44.test.cpp
+    gpu/Matrix44.cpp
+    gpu/Vector4.cpp
 )
 
 verilate(TestRtl SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)

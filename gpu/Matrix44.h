@@ -1,36 +1,6 @@
 #pragma once
 
-/**
- * @brief 4d Vector
- * 
- */
-struct FVector4
-{
-    union {
-        struct {
-            float X, Y, Z, W;
-        };
-        float Values[4];
-    };
-
-    FVector4();
-
-    FVector4(float _X, float _Y, float _Z, float _W);
-
-    static const FVector4& Zero();
-
-    float Dot(const FVector4& Other) const;
-
-    FVector4 operator+(const FVector4& Other) const;
-
-    FVector4 operator*(float Scalar) const;
-
-    FVector4 operator/(float Scalar) const;
-
-    float& operator[](int Index);
-
-    float operator[](int Index) const;
-};
+#include "Vector4.h"
 
 /**
  * @brief Row-Major storage of 4x4 matrix
@@ -69,9 +39,17 @@ struct FMatrix44
      * @brief Multiply Matrices togther
      * 
      * @param Other The other matrix to multiply with
-     * @return FMatrix44 
+     * @return Concatenated Matrix
      */
-    FMatrix44 operator*(const FMatrix44& Other);
+    FMatrix44 operator*(const FMatrix44& Other) const;
+
+    /**
+     * @brief Multiply Vector by this Matrix
+     * 
+     * @param Vector The Vector to multiply
+     * @return Vector transformed by Matrix
+     */
+    FVector4 operator*(const FVector4& Vector) const;
 
     /**
      * @brief Access a Row in the matrix
@@ -138,27 +116,36 @@ struct FMatrix44
     static FMatrix44 Scale(float Scale);
 
     /**
-     * @brief Create a yaw rotation matrix
+     * @brief Create a Z rotation matrix
+     * 
+     * @note Rotates clockwise around the axis
+     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
      */
-    static FMatrix44 RotateYaw(float Radians);
+    static FMatrix44 RotateZ(float Radians);
 
     /**
-     * @brief Create a pitch rotation matrix
+     * @brief Create a Y rotation matrix
+     * 
+     * @note Rotates clockwise around the axis
+     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
      */
-    static FMatrix44 RotatePitch(float Radians);
+    static FMatrix44 RotateY(float Radians);
 
     /**
-     * @brief Create a roll rotation matrix
+     * @brief Create a Z rotation matrix
+     * 
+     * @note Rotates clockwise around the axis
+     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
      */
-    static FMatrix44 RotateRoll(float Radians);
+    static FMatrix44 RotateX(float Radians);
 };
 

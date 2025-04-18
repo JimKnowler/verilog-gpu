@@ -3,7 +3,7 @@
 // Verilator
 #include <verilated.h>
 
-#include "gpu/Matrix.h"
+#include "gpu/Matrix44.h"
 
 void HelperExpectEq(const FVector4& Expected, const FVector4& Actual);
 

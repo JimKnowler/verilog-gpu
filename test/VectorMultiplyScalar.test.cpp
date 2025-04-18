@@ -9,7 +9,7 @@
 
 #include "TestBench.h"
 #include "gpu/FixedPoint.h"
-#include "gpu/Matrix.h"
+#include "gpu/Matrix44.h"
 #include "MathTestHelpers.h"
 
 class VectorMultiplyScalar : public ::testing::Test {

@@ -1,12 +1,9 @@
-#include "Matrix.h"
+#include "Matrix44.h"
 
 #include <math.h>
-namespace {
 
-    static const FVector4 kZeroVector4(
-        0.0f, 0.0f, 0.0f, 0.0f
-    );
-
+namespace 
+{
     static const FMatrix44 kZero(
         FVector4::Zero(), 
         FVector4::Zero(), 
@@ -20,52 +17,6 @@ namespace {
         FVector4(0.0f, 0.0f, 1.0f, 0.0f),
         FVector4(0.0f, 0.0f, 0.0f, 1.0f)
     );
-}
-
-FVector4::FVector4()
-{
-
-}
-
-FVector4::FVector4(float _X, float _Y, float _Z, float _W)
-    : X(_X), Y(_Y), Z(_Z), W(_W)
-{
-
-}
-
-const FVector4& FVector4::Zero()
-{
-    return kZeroVector4;
-}
-
-float FVector4::Dot(const FVector4 &Other) const
-{
-    return (X * Other.X) + (Y * Other.Y) + (Z * Other.Z) + (W * Other.W);
-}
-
-FVector4 FVector4::operator+(const FVector4 &Other) const
-{
-    return FVector4(X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W);
-}
-
-FVector4 FVector4::operator*(float Scalar) const
-{
-    return FVector4(X * Scalar, Y * Scalar, Z * Scalar, W * Scalar);
-}
-
-FVector4 FVector4::operator/(float Scalar) const
-{
-    return FVector4(X / Scalar, Y / Scalar, Z / Scalar, W / Scalar);
-}
-
-float &FVector4::operator[](int Index)
-{
-    return Values[Index];
-}
-
-float FVector4::operator[](int Index) const
-{
-    return Values[Index];
 }
 
 FMatrix44::FMatrix44()
@@ -89,7 +40,7 @@ FMatrix44& FMatrix44::operator=(const FMatrix44& Other)
     return *this;
 }
 
-FMatrix44 FMatrix44::operator*(const FMatrix44 &Other)
+FMatrix44 FMatrix44::operator*(const FMatrix44 &Other) const
 {
     FMatrix44 M;
     for (int i=0; i<4; i++)
@@ -101,6 +52,18 @@ FMatrix44 FMatrix44::operator*(const FMatrix44 &Other)
     }
 
     return M;
+}
+
+FVector4 FMatrix44::operator*(const FVector4 &Vector) const
+{
+    FVector4 Result;
+
+    for (int i=0; i<4; i++) 
+    {
+        Result[i] = Rows[i].Dot(Vector);
+    }
+    
+    return Result;
 }
 
 FVector4 &FMatrix44::operator[](int Index)
@@ -158,7 +121,7 @@ FMatrix44 FMatrix44::Scale(float Scale)
     return Matrix;
 }
 
-FMatrix44 FMatrix44::RotateYaw(float Radians)
+FMatrix44 FMatrix44::RotateZ(float Radians)
 {
     FMatrix44 Matrix = Identity();
     Matrix.Rows[0].X = cosf(Radians);
@@ -169,18 +132,18 @@ FMatrix44 FMatrix44::RotateYaw(float Radians)
     return Matrix;
 }
 
-FMatrix44 FMatrix44::RotatePitch(float Radians)
+FMatrix44 FMatrix44::RotateY(float Radians)
 {
     FMatrix44 Matrix = Identity();
     Matrix.Rows[0].X = cosf(Radians);
     Matrix.Rows[0].Z = sinf(Radians);
-    Matrix.Rows[1].X = -sinf(Radians);
-    Matrix.Rows[1].Z = cosf(Radians);
+    Matrix.Rows[2].X = -sinf(Radians);
+    Matrix.Rows[2].Z = cosf(Radians);
 
     return Matrix;
 }
 
-FMatrix44 FMatrix44::RotateRoll(float Radians)
+FMatrix44 FMatrix44::RotateX(float Radians)
 {
     FMatrix44 Matrix = Identity();
     Matrix.Rows[1].Y = cosf(Radians);
