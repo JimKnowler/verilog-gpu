@@ -39,7 +39,7 @@ FVector4 FVector4::CrossProduct(const FVector4 &Other) const
     return FVector4(
         (Y*Other.Z) - (Z*Other.Y),
         (Z*Other.X) - (X*Other.Z),
-        (X*Other.Y) * (Y*Other.X),
+        (X*Other.Y) - (Y*Other.X),
         0.0f
     );
 }
@@ -96,10 +96,10 @@ FVector4 FVector4::Normalise() const
 
 bool FVector4::IsDirection() const
 {
-    return W == 0.0f;
+    return fabs(W) < 0.0001f;
 }
 
 bool FVector4::IsPoint() const
 {
-    return W != 0.0f;
+    return fabs(W) > 0.0001f;
 }
