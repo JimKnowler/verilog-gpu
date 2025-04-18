@@ -18,7 +18,11 @@ endif()
 
 include_directories(.)
 
-add_executable(Main gpu/App.cpp)
+add_executable(Main 
+    gpu/App.cpp
+    gpu/Vector4.cpp
+    gpu/Matrix44.cpp
+)
 verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(Main PRIVATE

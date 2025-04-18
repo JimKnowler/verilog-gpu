@@ -1,5 +1,6 @@
 #include "App.h"
 #include "FixedPoint.h"
+#include "Matrix44.h"
 
 namespace {
     const uint32_t kScreenWidth = 1280;
@@ -8,11 +9,12 @@ namespace {
     const olc::vi2d kOrigin = {400, 150};
     const olc::vi2d kRasterSize = {400, 400};
 
-    const int kRasterizerBatchSize = 2000;
+    const int kRasterizerBatchSize = 10000;
 
-    olc::vi2d v1{50, 40};
-    olc::vi2d v2{300, 300};
-    olc::vi2d v3{100, 360};
+    // vertex colours
+    olc::Pixel c1{255, 0, 0};
+    olc::Pixel c2{0, 255, 0};
+    olc::Pixel c3{0, 0, 255};
 }
 
 int main(int argc, char* argv[])
@@ -49,23 +51,20 @@ bool App::OnUserCreate()
     // Construct the Verilated model, from VTriangleRasterizer.h generated from Verilating "VTriangleRasterizer.v"
     Rasterizer = new VTriangleRasterizer{Context};
 
-    Rasterizer->i_v1x = ToFixedPoint(v1.x);
-    Rasterizer->i_v1y = ToFixedPoint(v1.y);
-    Rasterizer->i_v1r = ToFixedPoint(1.0f);
-    Rasterizer->i_v1g = ToFixedPoint(0.0f);
-    Rasterizer->i_v1b = ToFixedPoint(0.0f);
+    // Vertex colours
+    Rasterizer->i_v1r = ToFixedPoint(c1.r / 255.0f);
+    Rasterizer->i_v1g = ToFixedPoint(c1.g / 255.0f);
+    Rasterizer->i_v1b = ToFixedPoint(c1.b / 255.0f);
+    
+    Rasterizer->i_v2r = ToFixedPoint(c2.r / 255.0f);
+    Rasterizer->i_v2g = ToFixedPoint(c2.g / 255.0f);
+    Rasterizer->i_v2b = ToFixedPoint(c3.b / 255.0f);
 
-    Rasterizer->i_v2x = ToFixedPoint(v2.x);
-    Rasterizer->i_v2y = ToFixedPoint(v2.y);
-    Rasterizer->i_v2r = ToFixedPoint(0.0f);
-    Rasterizer->i_v2g = ToFixedPoint(1.0f);
-    Rasterizer->i_v2b = ToFixedPoint(0.0f);
+    Rasterizer->i_v3r = ToFixedPoint(c3.r / 255.0f);
+    Rasterizer->i_v3g = ToFixedPoint(c3.g / 255.0f);
+    Rasterizer->i_v3b = ToFixedPoint(c3.b / 255.0f);
 
-    Rasterizer->i_v3x = ToFixedPoint(v3.x);
-    Rasterizer->i_v3y = ToFixedPoint(v3.y);    
-    Rasterizer->i_v3r = ToFixedPoint(0.0f);
-    Rasterizer->i_v3g = ToFixedPoint(0.0f);
-    Rasterizer->i_v3b = ToFixedPoint(1.0f);
+    InitRotateTriangle();
 
     return true;
 }
@@ -109,6 +108,8 @@ void App::Update(float DeltaTime)
 
         if (y >= kRasterSize.y) {
             y = 0;
+
+            TickRotateTriangle();
         }
     }
 }
@@ -132,6 +133,41 @@ void App::RasterizePixel(int x, int y)
 int App::GetRenderBufferIndex(int x, int y) const
 {
     return (y * kRasterSize.x) + x;
+}
+
+void App::InitRotateTriangle()
+{
+    Rotation = 0.0f;
+
+    TickRotateTriangle();
+}
+
+void App::TickRotateTriangle()
+{
+    const float DeltaTime = 0.1f;
+    const float RotationSpeed = M_PI;
+
+    Rotation += (DeltaTime * RotationSpeed);
+    Rotation = fmodf(Rotation, 2.0f * M_PI);
+
+    FVector4 v1(50, 40, 0, 1);
+    FVector4 v2(300, 300, 0, 1);
+    FVector4 v3(100, 360, 0, 1);
+
+    const FVector4 Center(kRasterSize.x / 2, kRasterSize.y / 2, 0);
+    FMatrix44 Rotate = FMatrix44::Translation(Center.X, Center.Y, 0) * FMatrix44::RotateZ(Rotation) * FMatrix44::Translation(-Center.X, -Center.Y, 0);
+    v1 = Rotate * v1;
+    v2 = Rotate * v2;
+    v3 = Rotate * v3;
+
+    Rasterizer->i_v1x = ToFixedPoint(v1.X);
+    Rasterizer->i_v1y = ToFixedPoint(v1.Y);
+
+    Rasterizer->i_v2x = ToFixedPoint(v2.X);
+    Rasterizer->i_v2y = ToFixedPoint(v2.Y);
+
+    Rasterizer->i_v3x = ToFixedPoint(v3.X);
+    Rasterizer->i_v3y = ToFixedPoint(v3.Y); 
 }
 
 void App::Render()

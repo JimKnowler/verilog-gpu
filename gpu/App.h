@@ -32,7 +32,11 @@ private:
     void Render();
     void RasterizePixel(int x, int y);
     int GetRenderBufferIndex(int x, int y) const;
+    
+    void InitRotateTriangle();
+    void TickRotateTriangle();
 
+    // screen co-ordinates of pixel being rasterized
     int x;
     int y;
 
@@ -40,4 +44,7 @@ private:
 
     VerilatedContext* Context = nullptr;
     VTriangleRasterizer* Rasterizer;
+
+
+    float Rotation = 0.0f;
 };
