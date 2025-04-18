@@ -180,3 +180,20 @@ FMatrix44 FMatrix44::LookAt(const FVector4& Eye, const FVector4& Center, const F
 
     return View;
 }
+
+FMatrix44 FMatrix44::Perspective(float FOV, float Aspect, float Near, float Far)
+{
+    const float HalfFOV = FOV * 0.5f;
+    const float TanHalfFOV = tanf(HalfFOV);
+    const float FarPlusNear = Far + Near;
+    const float FarMinusNear = Far - Near;
+
+    FMatrix44 M = FMatrix44::Zero();
+    M[0][0] = 1.0f / (Aspect * TanHalfFOV);
+    M[1][1] = 1.0f / TanHalfFOV;
+    M[2][2] = -(FarPlusNear / FarMinusNear);
+    M[2][3] = -(2.0f * Far * Near) / FarMinusNear;
+    M[3][2] = -1.0f;
+
+    return M;
+}

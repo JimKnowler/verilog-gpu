@@ -121,7 +121,7 @@ struct FMatrix44
      * @brief Create a Z rotation matrix
      * 
      * @note Rotates clockwise around the axis
-     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
+     * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
@@ -132,7 +132,7 @@ struct FMatrix44
      * @brief Create a Y rotation matrix
      * 
      * @note Rotates clockwise around the axis
-     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
+     * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
@@ -143,7 +143,7 @@ struct FMatrix44
      * @brief Create a Z rotation matrix
      * 
      * @note Rotates clockwise around the axis
-     * @note Uses right-hand-rule axes (Z-axes pointing out of screen)
+     * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
      * 
      * @param Radians Rotation angle in radians
      * @return FMatrix44 
@@ -152,7 +152,9 @@ struct FMatrix44
 
 
     /**
-     * @brief Create a View Transform
+     * @brief Create a View Transform matrix
+     * 
+     * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
      * 
      * @param Eye Location of the Camera
      * @param Center Location of the target point (what we're looking at)
@@ -161,5 +163,23 @@ struct FMatrix44
      * @return Matrix that transforms points from world space to view space
      */
     static FMatrix44 LookAt(const FVector4& Eye, const FVector4& Center, const FVector4& Up);
+
+
+    /**
+     * @brief Create a perspective projection matrix
+     * 
+     * This transforms view-space into clipping space
+     * - a unit cube, from +1 to -1 along each axis
+     * - NDC: normalised device co-ordinates
+     * - Maps depth into range [-1, 1]
+     * 
+     * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
+     * 
+     * @param FOV Field of view in the y axis (radians)
+     * @param Aspect Aspect Ration (width / height)
+     * @param Near Distance to the near clipping plane
+     * @param Far Distance to the far clipping plane
+     */
+    static FMatrix44 Perspective(float FOV, float Aspect, float Near, float Far);
 };
 
