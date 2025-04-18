@@ -65,34 +65,38 @@ TEST(Matrix, ShouldMultiplyVectorByZeroMatrix)
     HelperExpectEq(Expected, Result);
 }
 
-TEST(Matrix, ShouldRotateAroundXAxis)
+TEST(Matrix, ShouldRotatePointAroundXAxis)
 {
     const FVector4 Point(0.0f, 1.0f, 0.0f, 1.0f);
-    const FMatrix44 Matrix = FMatrix44::RotateX(M_PI_2);
-    const FVector4 Result = Matrix * Point;
+    const FVector4 Result = FMatrix44::RotateX(M_PI_2) * Point;
     const FVector4 Expected(0.0f, 0.0f, 1.0f, 1.0f);
     HelperExpectEq(Expected, Result);
 }
 
-TEST(Matrix, ShouldRotateAroundYAxis)
+TEST(Matrix, ShouldRotatePointAroundYAxis)
 {
     const FVector4 Point(1.0f, 0.0f, 0.0f, 1.0f);
-    const FMatrix44 Matrix = FMatrix44::RotateY(M_PI_2);
-    const FVector4 Result = Matrix * Point;
+    const FVector4 Result = FMatrix44::RotateY(M_PI_2) * Point;
     const FVector4 Expected(0.0f, 0.0f, -1.0f, 1.0f);
     HelperExpectEq(Expected, Result);
 }
 
-TEST(Matrix, ShouldRotateAroundZAxis)
+TEST(Matrix, ShouldRotatePointAroundZAxis)
 {
     const FVector4 Point(0.0f, 1.0f, 0.0f, 1.0f);
-    const FMatrix44 Matrix = FMatrix44::RotateZ(M_PI_2);
-    const FVector4 Result = Matrix * Point;
+    const FVector4 Result = FMatrix44::RotateZ(M_PI_2) * Point;
     const FVector4 Expected(-1.0f, 0.0f, 0.0f, 1.0f);
     HelperExpectEq(Expected, Result);
 }
 
-// TODO: Translate
+TEST(Matrix, ShouldTranslatePoint)
+{
+    const FVector4 Point(1.0f, 1.0f, 1.0f, 1.0f);
+    const FVector4 Result = FMatrix44::Translation(1.0f, 2.0f, 3.0f) * Point;
+    const FVector4 Expected(2.0f, 3.0f, 4.0f, 1.0f);
+    HelperExpectEq(Expected, Result);
+}
+
 // TODO: projection (with divide by W for homogenous co-ordinates)
 // TODO: camera view (does this require inversion?)
 // TODO: concatenate matrices
