@@ -6,7 +6,7 @@ namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
 
-    const olc::vi2d kOrigin = {400, 150};
+    const olc::vi2d kRasterOrigin = {400, 150};
     const olc::vi2d kRasterSize = {400, 400};
 
     const int kRasterizerBatchSize = 10000;
@@ -15,6 +15,13 @@ namespace {
     olc::Pixel c1{255, 0, 0};
     olc::Pixel c2{0, 255, 0};
     olc::Pixel c3{0, 0, 255};
+
+    float DegreesToRadians(float Degrees)
+    {
+        float Radians = Degrees * 2.0f * M_PI / 360.0f;
+
+        return Radians;
+    }
 }
 
 int main(int argc, char* argv[])
@@ -150,33 +157,61 @@ void App::TickRotateTriangle()
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
 
-    FVector4 v1(50, 40, 0, 1);
-    FVector4 v2(300, 300, 0, 1);
-    FVector4 v3(100, 360, 0, 1);
+    FVector4 v[3] = {
+        {-50, -60, 0, 1},
+        {100, 100, 0, 1},
+        {-100, 60, 0, 1}
+    };
 
-    const FVector4 Center(kRasterSize.x / 2, kRasterSize.y / 2, 0);
-    FMatrix44 Rotate = FMatrix44::Translation(Center.X, Center.Y, 0) * FMatrix44::RotateZ(Rotation) * FMatrix44::Translation(-Center.X, -Center.Y, 0);
-    v1 = Rotate * v1;
-    v2 = Rotate * v2;
-    v3 = Rotate * v3;
+    const FMatrix44 Rotate = FMatrix44::RotateZ(Rotation);
 
-    Rasterizer->i_v1x = ToFixedPoint(v1.X);
-    Rasterizer->i_v1y = ToFixedPoint(v1.Y);
+    const FVector4 Eye(0, 0, 400, 1);
+    const FVector4 Center(0, 0, 0, 1);
+    const FVector4 Up(0, 1, 0, 0);
+    const FMatrix44 View = FMatrix44::LookAt(Eye, Center, Up);
 
-    Rasterizer->i_v2x = ToFixedPoint(v2.X);
-    Rasterizer->i_v2y = ToFixedPoint(v2.Y);
+    const float FOV = DegreesToRadians(45.0f);
+    const float Aspect = float(kRasterSize.x) / float(kRasterSize.y);
+    const float Near = 0.1f;
+    const float Far = 1000.0f;
+    const FMatrix44 Projection = FMatrix44::Perspective(FOV, Aspect, Near, Far);
 
-    Rasterizer->i_v3x = ToFixedPoint(v3.X);
-    Rasterizer->i_v3y = ToFixedPoint(v3.Y); 
+    const FMatrix44 VertexTransform = Projection * View * Rotate;
+
+    for (int i=0; i<3; i++) 
+    {
+        FVector4& Vert = v[i];
+
+        // Transform by combined world+view+projection transform (-> Clip Space)
+        Vert = VertexTransform * Vert;
+
+        // divide by W (-> NDC)
+        Vert = Vert / Vert.W;
+
+        // Multiply by Screen Size + translate origin to center of screen
+        const float kHalfRasterX = kRasterSize.x * 0.5f;
+        const float kHalfRasterY = kRasterSize.y * 0.5f;
+        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
+        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
+
+        assert(Vert.Z < 1.0f);
+        assert(Vert.Z > -1.0f);
+    }
+
+    Rasterizer->i_v1x = ToFixedPoint(v[0].X);
+    Rasterizer->i_v1y = ToFixedPoint(v[0].Y);
+
+    Rasterizer->i_v2x = ToFixedPoint(v[1].X);
+    Rasterizer->i_v2y = ToFixedPoint(v[1].Y);
+
+    Rasterizer->i_v3x = ToFixedPoint(v[2].X);
+    Rasterizer->i_v3y = ToFixedPoint(v[2].Y); 
 }
 
 void App::Render()
 {
     FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::GREY);
 
-#if 0
-    DrawRect(kOrigin, kRasterSize, olc::WHITE);
-#else
     for (int x=0; x<kRasterSize.x; x++)
     {
         for (int y=0; y<kRasterSize.y; y++)
@@ -184,8 +219,7 @@ void App::Render()
             const int Index = GetRenderBufferIndex(x, y);
             const olc::Pixel Pixel = RenderBuffer[Index];
 
-            DrawRect(kOrigin + olc::vi2d{x,y}, {1,1}, Pixel);
+            DrawRect(kRasterOrigin + olc::vi2d{x,y}, {1,1}, Pixel);
         }
     }
-#endif
 }
