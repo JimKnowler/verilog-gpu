@@ -150,7 +150,6 @@ struct FMatrix44
      */
     static FMatrix44 RotateX(float Radians);
 
-
     /**
      * @brief Create a View Transform matrix
      * 
@@ -164,14 +163,15 @@ struct FMatrix44
      */
     static FMatrix44 LookAt(const FVector4& Eye, const FVector4& Center, const FVector4& Up);
 
-
     /**
      * @brief Create a perspective projection matrix
      * 
-     * This transforms view-space into clipping space
-     * - a unit cube, from +1 to -1 along each axis
+     * This transforms view-space into clipping space.
+     * 
+     * After transforming a point to clipping space, divide the point by its' W to
+     * get a point in NDC:
      * - NDC: normalised device co-ordinates
-     * - Maps depth into range [-1, 1]
+     * - a unit cube, from +1 to -1 along each axis
      * 
      * @note Uses right-hand-rule axes (Negative Z-axis pointing into scene)
      * 
