@@ -115,8 +115,8 @@ void App::Update(float DeltaTime)
 
 void App::RasterizePixel(int x, int y)
 {
-    Rasterizer->i_x = ToFixedPoint(x);
-    Rasterizer->i_y = ToFixedPoint(y);
+    Rasterizer->i_x = x;
+    Rasterizer->i_y = y;
 
     Rasterizer->eval();
 

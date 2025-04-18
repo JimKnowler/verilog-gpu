@@ -72,4 +72,12 @@ function `FixedPoint_t uint8_to_fixed_point;
     end
 endfunction
 
+function `FixedPoint_t int32_to_fixed_point;
+    input signed [31:0] a;
+
+    begin
+        int32_to_fixed_point = a <<< `FIXEDPOINT_FRACTION;
+    end
+endfunction
+
 `endif // FIXEDPOINT_VH

@@ -2,8 +2,7 @@
 
 module TriangleRasterizer (
     // FixedPoint: x,y screen location of rasterized pixel
-    // TODO: can we render fractions of screen space pixels?  or should this be plain integer (and convert to fixed point internally)
-    input `FixedPoint_t i_x, i_y,
+    input signed [31:0] i_x, i_y,
 
     // FixedPoint: x,y screen location & colour of triangle vertices
     input `FixedPoint_t i_v1x, i_v1y, i_v1r, i_v1g, i_v1b,
@@ -35,6 +34,8 @@ endfunction
 // TODO: precompute edge function coefficients for triangle
 // -> ready for the form EdgeFunction = Ax + By + C
 
+reg `FixedPoint_t r_x;
+reg `FixedPoint_t r_y;
 reg `FixedPoint_t r_w1;
 reg `FixedPoint_t r_w2;
 reg `FixedPoint_t r_w3;
@@ -45,9 +46,11 @@ reg `FixedPoint_t r_w3_norm;
 
 always @(*)
 begin
-    r_w1 = edge_function(i_v1x, i_v1y, i_v2x, i_v2y, i_x, i_y);
-    r_w2 = edge_function(i_v2x, i_v2y, i_v3x, i_v3y, i_x, i_y);
-    r_w3 = edge_function(i_v3x, i_v3y, i_v1x, i_v1y, i_x, i_y);
+    r_x = int32_to_fixed_point(i_x);
+    r_y = int32_to_fixed_point(i_y);
+    r_w1 = edge_function(i_v1x, i_v1y, i_v2x, i_v2y, r_x, r_y);
+    r_w2 = edge_function(i_v2x, i_v2y, i_v3x, i_v3y, r_x, r_y);
+    r_w3 = edge_function(i_v3x, i_v3y, i_v1x, i_v1y, r_x, r_y);
 
     r_area = edge_function(i_v1x, i_v1y, i_v2x, i_v2y, i_v3x, i_v3y);
 
