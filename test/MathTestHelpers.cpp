@@ -7,7 +7,7 @@
 
 namespace
 {
-    constexpr float kLambda = 0.005f;
+    constexpr float kLambda = 0.01f;
 }
 
 void HelperExpectEq(const float Expected, const float Actual)

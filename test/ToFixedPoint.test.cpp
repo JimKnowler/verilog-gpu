@@ -25,10 +25,9 @@ TEST(ToFixedPoint, ShouldSupportQuarter)
 
 TEST(ToFixedPoint, ShouldSupportPi)
 {
-    // Fixed point representation of pi, when fraction width = 16
-    const uint32_t kPiFractionWidth16 = 205783;
+    const uint32_t kPiFractionWidth14 = 51445;
 
-    EXPECT_EQ(kPiFractionWidth16 << (kFractionWidth - 16), ToFixedPoint(3.14f));
+    EXPECT_EQ(kPiFractionWidth14, ToFixedPoint(3.14f));
 }
 
 TEST(ToFixedPoint, ShouldSupportMinusOne)

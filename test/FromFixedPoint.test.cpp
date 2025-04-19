@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "gpu/FixedPoint.h"
+#include "MathTestHelpers.h"
 
 TEST(FromFixedPoint, ShouldSupportZero)
 {
@@ -25,8 +26,7 @@ TEST(FromFixedPoint, ShouldSupportQuarter)
 
 TEST(FromFixedPoint, ShouldSupportPi)
 {
-    // fixed point representation of pi, when using fractionwidth = 16
-    const uint32_t kPiFractionWidth16 = 205783;
+    const uint32_t kPiFractionWidth14 = 51445;
 
-    EXPECT_NEAR(3.14f, FromFixedPoint(kPiFractionWidth16 << (kFractionWidth - 16)), 0.005f);
+    HelperExpectEq(3.14f, FromFixedPoint(kPiFractionWidth14));
 }
