@@ -5,9 +5,18 @@
 
 #include "gpu/FixedPoint.h"
 
-void HelperExpectEq(const FVector4& Expected, const FVector4& Actual) 
+namespace
 {
     constexpr float kLambda = 0.005f;
+}
+
+void HelperExpectEq(const float Expected, const float Actual)
+{
+    EXPECT_NEAR(Expected, Actual, kLambda);
+}
+
+void HelperExpectEq(const FVector4 &Expected, const FVector4 &Actual)
+{
     EXPECT_NEAR(Expected.X, Actual.X, kLambda);
     EXPECT_NEAR(Expected.Y, Actual.Y, kLambda);
     EXPECT_NEAR(Expected.Z, Actual.Z, kLambda);
@@ -68,4 +77,11 @@ void HelperSetFixedPointMatrix(VlWide<16UL>& FixedPointMatrix, const FMatrix44& 
         FixedPointMatrix.at(Offset + 2) = ToFixedPoint(Row.Z);
         FixedPointMatrix.at(Offset + 3) = ToFixedPoint(Row.W);
     }
+}
+
+float DegreesToRadians(float Degrees)
+{
+    float Radians = Degrees * 2.0f * M_PI / 360.0f;
+
+    return Radians;
 }

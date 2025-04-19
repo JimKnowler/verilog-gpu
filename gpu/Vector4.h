@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 /**
  * @brief 4d Vector
  * 
@@ -61,4 +63,11 @@ struct FVector4
      * Vectors representing points have W != 0
      */
     bool IsPoint() const;
+
+    /**
+     * Convert to string.
+     * 
+     * Intended for development/debug purposes.
+     */
+    std::string ToString() const;
 };

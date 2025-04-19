@@ -50,3 +50,37 @@ TEST_F(MatrixMultiplyVector, ShouldMultiplyByIdentity)
 
     HelperTestMultiplyVector(FMatrix44::Identity(), kVector, kVector);
 }
+
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByRotateX)
+{
+    FMatrix44 kMatrix = FMatrix44::RotateX(DegreesToRadians(45));
+
+    const FVector4 kVector(1.0f, 2.0f, 3.0f, 4.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByRotateY)
+{
+    FMatrix44 kMatrix = FMatrix44::RotateY(DegreesToRadians(45));
+
+    const FVector4 kVector(1.0f, 2.0f, 3.0f, 4.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByRotateZ)
+{
+    FMatrix44 kMatrix = FMatrix44::RotateZ(DegreesToRadians(45));
+
+    const FVector4 kVector(1.0f, 2.0f, 3.0f, 4.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
+// TODO: view matrix
+// TODO: projection matrix
+// TODO: concatenated view + projection matrix

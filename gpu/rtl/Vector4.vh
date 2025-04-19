@@ -2,9 +2,11 @@
 
 /**
  * 4d Vector
+ *
+ * NOTE: fields are reversed
  */
 typedef struct packed {
-    logic `FixedPoint_t x, y, z, w;
+    logic `FixedPoint_t w, z, y, x;
 } Vector4_t;
 
 /**

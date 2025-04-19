@@ -103,3 +103,16 @@ bool FVector4::IsPoint() const
 {
     return fabs(W) > 0.0001f;
 }
+
+std::string FVector4::ToString() const
+{
+    char Buffer[64];
+    snprintf(Buffer, sizeof(Buffer), 
+        "x[%.2f] y[%.2f] z[%.2f] w[%.2f]", 
+        X, Y, Z, W
+    );
+
+    std::string Str = Buffer;
+
+    return Str;
+}
