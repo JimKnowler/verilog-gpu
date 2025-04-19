@@ -63,6 +63,7 @@ add_executable(TestRtl
     test/MathTestHelpers.cpp
     test/MatrixMultiplyVector.test.cpp
     test/Matrix44.test.cpp
+    test/TriangleRasterizerTiming.test.cpp
     test/VectorDotProduct.test.cpp
     test/VectorAddVector.test.cpp
     test/VectorMultiplyScalar.test.cpp

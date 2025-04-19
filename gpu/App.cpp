@@ -11,10 +11,9 @@ namespace {
 
     const int kRasterizerBatchSize = 10000;
 
-    // vertex colours
-    olc::Pixel c1{255, 0, 0};
-    olc::Pixel c2{0, 255, 0};
-    olc::Pixel c3{0, 0, 255};
+    const FVector4 c1(1.0f, 0.0f, 0.0f, 1.0f);
+    const FVector4 c2(0.0f, 1.0f, 0.0f, 1.0f);
+    const FVector4 c3(0.0f, 0.0f, 1.0f, 1.0f);
 
     float DegreesToRadians(float Degrees)
     {
@@ -53,18 +52,10 @@ bool App::OnUserCreate()
     y = 0;
 
     // Vertex colours
-    Rasterizer.i_v1r = ToFixedPoint(c1.r / 255.0f);
-    Rasterizer.i_v1g = ToFixedPoint(c1.g / 255.0f);
-    Rasterizer.i_v1b = ToFixedPoint(c1.b / 255.0f);
-    
-    Rasterizer.i_v2r = ToFixedPoint(c2.r / 255.0f);
-    Rasterizer.i_v2g = ToFixedPoint(c2.g / 255.0f);
-    Rasterizer.i_v2b = ToFixedPoint(c3.b / 255.0f);
-
-    Rasterizer.i_v3r = ToFixedPoint(c3.r / 255.0f);
-    Rasterizer.i_v3g = ToFixedPoint(c3.g / 255.0f);
-    Rasterizer.i_v3b = ToFixedPoint(c3.b / 255.0f);
-
+    HelperSetFixedPointVector(Rasterizer.i_c1, c1);
+    HelperSetFixedPointVector(Rasterizer.i_c2, c2);
+    HelperSetFixedPointVector(Rasterizer.i_c3, c3);
+        
     InitRotateTriangle();
 
     return true;
@@ -118,13 +109,25 @@ void App::RasterizePixel(int x, int y)
 
     Rasterizer.eval();
 
-    const int r = Rasterizer.o_r;
-    const int g = Rasterizer.o_g;
-    const int b = Rasterizer.o_b;
-
     const int Index = GetRenderBufferIndex(x, y);
     olc::Pixel& Pixel = RenderBuffer[Index];
-    Pixel = olc::Pixel(r, g, b);
+
+    if (Rasterizer.o_write == 1)
+    {
+        const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
+
+        const std::function FloatToUint8 = [](float Value) -> uint8_t {
+            return static_cast<uint8_t>(255.0f * std::clamp(Value, 0.0f, 1.0f));
+        };
+
+        const uint8_t r = FloatToUint8(Colour.X);
+        const uint8_t g = FloatToUint8(Colour.Y);
+        const uint8_t b = FloatToUint8(Colour.Z);
+
+        Pixel = olc::Pixel(r, g, b);
+    } else {
+        Pixel = olc::BLACK;
+    }
 }
 
 int App::GetRenderBufferIndex(int x, int y) const
@@ -191,21 +194,17 @@ void App::TickRotateTriangle()
         Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
 #endif
 
+        // TODO: clean this up - separate function to get the right verilog input port?
         switch (i)
         {
             case 0:
-                Rasterizer.i_v1x = ToFixedPoint(Vert.X);
-                Rasterizer.i_v1y = ToFixedPoint(Vert.Y);
-                break;
-    
+                HelperSetFixedPointVector(Rasterizer.i_v1, Vert);
+                break;    
             case 1:
-                Rasterizer.i_v2x = ToFixedPoint(Vert.X);
-                Rasterizer.i_v2y = ToFixedPoint(Vert.Y);
+                HelperSetFixedPointVector(Rasterizer.i_v2, Vert);
                 break;
-    
             case 2:
-                Rasterizer.i_v3x = ToFixedPoint(Vert.X);
-                Rasterizer.i_v3y = ToFixedPoint(Vert.Y); 
+                HelperSetFixedPointVector(Rasterizer.i_v3, Vert);
                 break;
         };
     }

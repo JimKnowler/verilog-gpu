@@ -1,16 +1,21 @@
 `include "FixedPoint.vh"
+`include "Vector4.vh"
 
 module TriangleRasterizer (
     // FixedPoint: x,y screen location of rasterized pixel
     input signed [31:0] i_x, i_y,
 
-    // FixedPoint: x,y screen location & colour of triangle vertices
-    input `FixedPoint_t i_v1x, i_v1y, i_v1r, i_v1g, i_v1b,
-    input `FixedPoint_t i_v2x, i_v2y, i_v2r, i_v2g, i_v2b,
-    input `FixedPoint_t i_v3x, i_v3y, i_v3r, i_v3g, i_v3b,
+    // ScreenSpace locations for vertices
+    input Vector4_t i_v1, i_v2, i_v3,
 
-    // Integer: r,g,b colour output of rasterized pixel
-    output reg [7:0] o_r, o_g, o_b
+    // RGBA colours for vertices
+    input Vector4_t i_c1, i_c2, i_c3,
+
+    // RGBA colour output of rasterized pixel
+    output Vector4_t o_colour,
+
+    // signals when a pixel inside the triangle is being written
+    output o_write
 );
 
 /*
@@ -48,25 +53,29 @@ always @(*)
 begin
     r_x = int32_to_fixed_point(i_x);
     r_y = int32_to_fixed_point(i_y);
-    r_w1 = edge_function(i_v1x, i_v1y, i_v2x, i_v2y, r_x, r_y);
-    r_w2 = edge_function(i_v2x, i_v2y, i_v3x, i_v3y, r_x, r_y);
-    r_w3 = edge_function(i_v3x, i_v3y, i_v1x, i_v1y, r_x, r_y);
+    r_w1 = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, r_x, r_y);
+    r_w2 = edge_function(i_v2.x, i_v2.y, i_v3.x, i_v3.y, r_x, r_y);
+    r_w3 = edge_function(i_v3.x, i_v3.y, i_v1.x, i_v1.y, r_x, r_y);
 
-    r_area = edge_function(i_v1x, i_v1y, i_v2x, i_v2y, i_v3x, i_v3y);
+    r_area = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, i_v3.x, i_v3.y);
 
     r_w1_norm = fixed_point_divide(r_w1, r_area);
     r_w2_norm = fixed_point_divide(r_w2, r_area);
     r_w3_norm = fixed_point_divide(r_w3, r_area);
 
-    o_r = 0;
-    o_g = 0;
-    o_b = 0;
+    o_colour.x = 0;
+    o_colour.y = 0;
+    o_colour.z = 0;
+    o_colour.w = 0;
+    o_write = 0;
 
     if ((r_w1 >= 0) && (r_w2 >= 0) && (r_w3 >= 0))
     begin
-        o_r = fixed_point_to_uint8(fixed_point_multiply(uint8_to_fixed_point(255), fixed_point_multiply(r_w1_norm, i_v1r) + fixed_point_multiply(r_w2_norm, i_v2r) + fixed_point_multiply(r_w3_norm, i_v3r)));
-        o_g = fixed_point_to_uint8(fixed_point_multiply(uint8_to_fixed_point(255), fixed_point_multiply(r_w1_norm, i_v1g) + fixed_point_multiply(r_w2_norm, i_v2g) + fixed_point_multiply(r_w3_norm, i_v3g)));
-        o_b = fixed_point_to_uint8(fixed_point_multiply(uint8_to_fixed_point(255), fixed_point_multiply(r_w1_norm, i_v1b) + fixed_point_multiply(r_w2_norm, i_v2b) + fixed_point_multiply(r_w3_norm, i_v3b)));
+        o_colour.x = fixed_point_multiply(r_w1_norm, i_c1.x) + fixed_point_multiply(r_w2_norm, i_c2.x) + fixed_point_multiply(r_w3_norm, i_c3.x);
+        o_colour.y = fixed_point_multiply(r_w1_norm, i_c1.y) + fixed_point_multiply(r_w2_norm, i_c2.y) + fixed_point_multiply(r_w3_norm, i_c3.y);
+        o_colour.z = fixed_point_multiply(r_w1_norm, i_c1.z) + fixed_point_multiply(r_w2_norm, i_c2.z) + fixed_point_multiply(r_w3_norm, i_c3.z);
+        o_colour.w = uint8_to_fixed_point(1);
+        o_write = 1;
     end
 end
 
