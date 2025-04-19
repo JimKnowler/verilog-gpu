@@ -12,6 +12,8 @@
 #include "gpu/FixedPoint.h"
 #include "gpu/Matrix44.h"
 #include "MathTestHelpers.h"
+#include "gpu/VerilatorHelpers.h"
+#include "gpu/VerilatorHelpers.h"
 
 class VectorSelect : public ::testing::Test {
 public:

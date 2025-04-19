@@ -3,6 +3,7 @@
 
 #include "gpu/FixedPoint.h"
 #include "MathTestHelpers.h"
+#include "gpu/VerilatorHelpers.h"
 
 TEST(FromFixedPoint, ShouldSupportZero)
 {

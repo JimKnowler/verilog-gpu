@@ -10,6 +10,7 @@
 #include "TestBench.h"
 #include "gpu/FixedPoint.h"
 #include "MathTestHelpers.h"
+#include "gpu/VerilatorHelpers.h"
 
 class VectorAddVector : public ::testing::Test {
 public:

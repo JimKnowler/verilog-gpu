@@ -22,8 +22,10 @@ add_executable(Main
     gpu/App.cpp
     gpu/Vector4.cpp
     gpu/Matrix44.cpp
+    gpu/VerilatorHelpers.cpp
 )
 verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
+verilate(Main SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(Main PRIVATE
     "-framework OpenGL"
@@ -69,6 +71,7 @@ add_executable(TestRtl
     test/VertexTransform.test.cpp
     gpu/Matrix44.cpp
     gpu/Vector4.cpp
+    gpu/VerilatorHelpers.cpp
 )
 
 verilate(TestRtl SOURCES gpu/rtl/FixedPointAdd.v INCLUDE_DIRS gpu/rtl)

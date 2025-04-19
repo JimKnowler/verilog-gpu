@@ -12,6 +12,7 @@
 #include "gpu/FixedPoint.h"
 #include "gpu/Matrix44.h"
 #include "MathTestHelpers.h"
+#include "gpu/VerilatorHelpers.h"
 
 class VertexTransform : public ::testing::Test {
 public:

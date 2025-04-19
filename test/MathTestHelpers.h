@@ -1,8 +1,5 @@
 #pragma once
 
-// Verilator
-#include <verilated.h>
-
 #include "gpu/Matrix44.h"
 
 void HelperExpectEq(const float Expected, const float Actual);
@@ -10,11 +7,5 @@ void HelperExpectEq(const float Expected, const float Actual);
 void HelperExpectEq(const FVector4& Expected, const FVector4& Actual);
 
 void HelperExpectEq(const FMatrix44& Expected, const FMatrix44& Actual);
-
-void HelperSetFixedPointVector(VlWide<4UL>& FixedPointVector, const FVector4& Vector);
-
-FVector4 HelperGetFixedPointVector(const VlWide<4UL>& FixedPointVector);
-
-void HelperSetFixedPointMatrix(VlWide<16UL>& FixedPointMatrix, const FMatrix44& Matrix);
 
 float DegreesToRadians(float Degrees);
