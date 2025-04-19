@@ -158,6 +158,12 @@ void App::TickRotateTriangle()
 
     const FMatrix44 Transform = MakeModelViewProjectionTransform();
 
+    VlWide<4UL>* InputPorts[3] = {
+        &Rasterizer.i_v1,
+        &Rasterizer.i_v2,
+        &Rasterizer.i_v3
+    };
+
     for (int i=0; i<3; i++) 
     {
         FVector4 Vert = v[i];
@@ -194,19 +200,7 @@ void App::TickRotateTriangle()
         Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
 #endif
 
-        // TODO: clean this up - separate function to get the right verilog input port?
-        switch (i)
-        {
-            case 0:
-                HelperSetFixedPointVector(Rasterizer.i_v1, Vert);
-                break;    
-            case 1:
-                HelperSetFixedPointVector(Rasterizer.i_v2, Vert);
-                break;
-            case 2:
-                HelperSetFixedPointVector(Rasterizer.i_v3, Vert);
-                break;
-        };
+        HelperSetFixedPointVector(*InputPorts[i], Vert);
     }
 
     
