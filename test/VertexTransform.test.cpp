@@ -50,17 +50,18 @@ public:
         const FVector4 ClipSpace = Matrix * Vertex;
         //printf("  ClipSpace %s\n", ClipSpace.ToString().c_str());
 
-        const FVector4 NDC = ClipSpace / NDC.W;
-        //printf("        NDC %s\n", Expected.ToString().c_str());
+    
+        const FVector4 NDC = ClipSpace / ClipSpace.W;
+        //printf("        NDC %s\n", NDC.ToString().c_str());
 
         FVector4 ScreenSpace = NDC;
         const float kHalfScreenWidth = ScreenWidth * 0.5f;
         const float kHalfScreenHeight = ScreenHeight * 0.5f;
         ScreenSpace.X = (ScreenSpace.X * kHalfScreenWidth) + kHalfScreenWidth; 
         ScreenSpace.Y = (ScreenSpace.Y * kHalfScreenHeight) + kHalfScreenHeight;
-        //printf("ScreenSpace %s\n", ScreenSpace.ToString().c_str());
+        printf("ScreenSpace %s\n", ScreenSpace.ToString().c_str());
 
-        //printf("     Result %s\n", Result.ToString().c_str());
+        printf("     Result %s\n", Result.ToString().c_str());
         
         EXPECT_TRUE(ScreenSpace.Z > -1.0f);
         EXPECT_TRUE(ScreenSpace.Z < 1.0f);

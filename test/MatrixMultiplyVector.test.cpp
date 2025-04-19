@@ -81,6 +81,36 @@ TEST_F(MatrixMultiplyVector, ShouldMultiplyByRotateZ)
     HelperTestMultiplyVector(kMatrix, kVector, kExpected);
 }
 
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByScaleX)
+{
+    FMatrix44 kMatrix = FMatrix44::Scale(2.0f, 1.0f, 1.0f);
+
+    const FVector4 kVector(1.0f, 4.0f, 6.0f, 8.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByScaleY)
+{
+    FMatrix44 kMatrix = FMatrix44::Scale(1.0f, 2.0f, 1.0f);
+
+    const FVector4 kVector(1.0f, 4.0f, 6.0f, 8.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
+TEST_F(MatrixMultiplyVector, ShouldMultiplyByScaleZ)
+{
+    FMatrix44 kMatrix = FMatrix44::Scale(1.0f, 1.0f, 2.0f);
+
+    const FVector4 kVector(1.0f, 4.0f, 6.0f, 8.0f);
+    const FVector4 kExpected = kMatrix * kVector;
+
+    HelperTestMultiplyVector(kMatrix, kVector, kExpected);
+}
+
 // TODO: view matrix
 // TODO: projection matrix
 // TODO: concatenated view + projection matrix
