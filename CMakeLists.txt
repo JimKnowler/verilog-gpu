@@ -86,6 +86,7 @@ verilate(TestRtl SOURCES gpu/rtl/VectorMultiplyScalar.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorDivideScalar.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorSelect.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/TriangleRasterizerTiming.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 

@@ -80,4 +80,32 @@ function `FixedPoint_t int32_to_fixed_point;
     end
 endfunction
 
+function signed [31:0] fixed_point_to_int32;
+    input `FixedPoint_t a;
+
+    begin
+        fixed_point_to_int32 = a >>> `FIXEDPOINT_FRACTION;
+    end
+endfunction
+
+function `FixedPoint_t fixed_point_min3;
+    input `FixedPoint_t a, b, c;
+
+    begin
+        fixed_point_min3 = (a < b) 
+                ? ((a < c) ? a : c) 
+                : ((b < c) ? b : c);
+    end
+endfunction
+
+function `FixedPoint_t fixed_point_max3;
+    input `FixedPoint_t a, b, c;
+
+    begin
+        fixed_point_max3 = (a > b) 
+                ? ((a > c) ? a : c) 
+                : ((b > c) ? b : c);
+    end
+endfunction
+
 `endif // FIXEDPOINT_VH
