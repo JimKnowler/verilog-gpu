@@ -10,25 +10,28 @@ TEST(ToFixedPoint, ShouldSupportZero)
 
 TEST(ToFixedPoint, ShouldSupportOne)
 { 
-    EXPECT_EQ(1 << 8, ToFixedPoint(1.0f));
+    EXPECT_EQ(1 << kFractionWidth, ToFixedPoint(1.0f));
 }
 
 TEST(ToFixedPoint, ShouldSupportHalf)
 { 
-    EXPECT_EQ(1 << 7, ToFixedPoint(0.5f));
+    EXPECT_EQ(1 << (kFractionWidth-1), ToFixedPoint(0.5f));
 }
 
 TEST(ToFixedPoint, ShouldSupportQuarter)
 { 
-    EXPECT_EQ(1 << 6, ToFixedPoint(0.25f));
+    EXPECT_EQ(1 << (kFractionWidth-2), ToFixedPoint(0.25f));
 }
 
 TEST(ToFixedPoint, ShouldSupportPi)
 {
-    EXPECT_EQ(803, ToFixedPoint(3.14f));
+    // Fixed point representation of pi, when fraction width = 16
+    const uint32_t kPiFractionWidth16 = 205783;
+
+    EXPECT_EQ(kPiFractionWidth16 << (kFractionWidth - 16), ToFixedPoint(3.14f));
 }
 
 TEST(ToFixedPoint, ShouldSupportMinusOne)
 {
-    EXPECT_EQ(-(1 << 8), ToFixedPoint(-1.0f));
+    EXPECT_EQ(-(1 << kFractionWidth), ToFixedPoint(-1.0f));
 }

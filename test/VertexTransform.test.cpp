@@ -59,9 +59,9 @@ public:
         const float kHalfScreenHeight = ScreenHeight * 0.5f;
         ScreenSpace.X = (ScreenSpace.X * kHalfScreenWidth) + kHalfScreenWidth; 
         ScreenSpace.Y = (ScreenSpace.Y * kHalfScreenHeight) + kHalfScreenHeight;
-        printf("ScreenSpace %s\n", ScreenSpace.ToString().c_str());
+        //printf("ScreenSpace %s\n", ScreenSpace.ToString().c_str());
 
-        printf("     Result %s\n", Result.ToString().c_str());
+        //printf("     Result %s\n", Result.ToString().c_str());
         
         EXPECT_TRUE(ScreenSpace.Z > -1.0f);
         EXPECT_TRUE(ScreenSpace.Z < 1.0f);
