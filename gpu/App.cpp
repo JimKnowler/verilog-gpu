@@ -1,6 +1,6 @@
 #include "App.h"
 #include "FixedPoint.h"
-#include "Matrix44.h"
+#include "VerilatorHelpers.h"
 
 namespace {
     const uint32_t kScreenWidth = 1280;
@@ -52,24 +52,18 @@ bool App::OnUserCreate()
     x = 0;
     y = 0;
 
-    // Construct a VerilatedContext to hold simulation time, etc.
-    Context = new VerilatedContext;
-
-    // Construct the Verilated model, from VTriangleRasterizer.h generated from Verilating "VTriangleRasterizer.v"
-    Rasterizer = new VTriangleRasterizer{Context};
-
     // Vertex colours
-    Rasterizer->i_v1r = ToFixedPoint(c1.r / 255.0f);
-    Rasterizer->i_v1g = ToFixedPoint(c1.g / 255.0f);
-    Rasterizer->i_v1b = ToFixedPoint(c1.b / 255.0f);
+    Rasterizer.i_v1r = ToFixedPoint(c1.r / 255.0f);
+    Rasterizer.i_v1g = ToFixedPoint(c1.g / 255.0f);
+    Rasterizer.i_v1b = ToFixedPoint(c1.b / 255.0f);
     
-    Rasterizer->i_v2r = ToFixedPoint(c2.r / 255.0f);
-    Rasterizer->i_v2g = ToFixedPoint(c2.g / 255.0f);
-    Rasterizer->i_v2b = ToFixedPoint(c3.b / 255.0f);
+    Rasterizer.i_v2r = ToFixedPoint(c2.r / 255.0f);
+    Rasterizer.i_v2g = ToFixedPoint(c2.g / 255.0f);
+    Rasterizer.i_v2b = ToFixedPoint(c3.b / 255.0f);
 
-    Rasterizer->i_v3r = ToFixedPoint(c3.r / 255.0f);
-    Rasterizer->i_v3g = ToFixedPoint(c3.g / 255.0f);
-    Rasterizer->i_v3b = ToFixedPoint(c3.b / 255.0f);
+    Rasterizer.i_v3r = ToFixedPoint(c3.r / 255.0f);
+    Rasterizer.i_v3g = ToFixedPoint(c3.g / 255.0f);
+    Rasterizer.i_v3b = ToFixedPoint(c3.b / 255.0f);
 
     InitRotateTriangle();
 
@@ -79,11 +73,7 @@ bool App::OnUserCreate()
 bool App::OnUserDestroy()
 {
     // Final verilatedmodel cleanup
-    Rasterizer->final();
-
-    // Destroy model
-    delete Rasterizer;
-    delete Context;
+    Rasterizer.final();
 
     return true;
 }
@@ -123,14 +113,14 @@ void App::Update(float DeltaTime)
 
 void App::RasterizePixel(int x, int y)
 {
-    Rasterizer->i_x = x;
-    Rasterizer->i_y = y;
+    Rasterizer.i_x = x;
+    Rasterizer.i_y = y;
 
-    Rasterizer->eval();
+    Rasterizer.eval();
 
-    const int r = Rasterizer->o_r;
-    const int g = Rasterizer->o_g;
-    const int b = Rasterizer->o_b;
+    const int r = Rasterizer.o_r;
+    const int g = Rasterizer.o_g;
+    const int b = Rasterizer.o_b;
 
     const int Index = GetRenderBufferIndex(x, y);
     olc::Pixel& Pixel = RenderBuffer[Index];
@@ -157,12 +147,74 @@ void App::TickRotateTriangle()
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
 
-    FVector4 v[3] = {
+    const FVector4 v[3] = {
         {-50, -60, 0, 1},
         {100, 100, 0, 1},
         {-100, 60, 0, 1}
     };
 
+    const FMatrix44 Transform = MakeModelViewProjectionTransform();
+
+    for (int i=0; i<3; i++) 
+    {
+        FVector4 Vert = v[i];
+
+#if 0
+        // C++ Vertex Transform
+        // ------------------------
+
+        // Transform by combined world+view+projection transform (-> Clip Space)
+        Vert = Transform * Vert;
+
+        // divide by W (-> NDC)
+        Vert = Vert / Vert.W;
+
+        // Multiply by Screen Size + translate origin to center of screen
+        const float kHalfRasterX = kRasterSize.x * 0.5f;
+        const float kHalfRasterY = kRasterSize.y * 0.5f;
+        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
+        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
+
+        assert(Vert.Z < 1.0f);
+        assert(Vert.Z > -1.0f);
+#else
+        // Verilog Vertex Transform
+        // ----------------------------
+
+        HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
+        HelperSetFixedPointVector(VertexTransform.i_vertex, Vert);
+        VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
+        VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
+
+        VertexTransform.eval();
+        
+        Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
+#endif
+
+        switch (i)
+        {
+            case 0:
+                Rasterizer.i_v1x = ToFixedPoint(Vert.X);
+                Rasterizer.i_v1y = ToFixedPoint(Vert.Y);
+                break;
+    
+            case 1:
+                Rasterizer.i_v2x = ToFixedPoint(Vert.X);
+                Rasterizer.i_v2y = ToFixedPoint(Vert.Y);
+                break;
+    
+            case 2:
+                Rasterizer.i_v3x = ToFixedPoint(Vert.X);
+                Rasterizer.i_v3y = ToFixedPoint(Vert.Y); 
+                break;
+        };
+    }
+
+    
+}
+
+FMatrix44 App::MakeModelViewProjectionTransform() const
+{
     const FMatrix44 Rotate = FMatrix44::RotateZ(Rotation);
 
     const FVector4 Eye(0, 0, 400, 1);
@@ -176,36 +228,9 @@ void App::TickRotateTriangle()
     const float Far = 1000.0f;
     const FMatrix44 Projection = FMatrix44::Perspective(FOV, Aspect, Near, Far);
 
-    const FMatrix44 VertexTransform = Projection * View * Rotate;
+    const FMatrix44 Transform = Projection * View * Rotate;
 
-    for (int i=0; i<3; i++) 
-    {
-        FVector4& Vert = v[i];
-
-        // Transform by combined world+view+projection transform (-> Clip Space)
-        Vert = VertexTransform * Vert;
-
-        // divide by W (-> NDC)
-        Vert = Vert / Vert.W;
-
-        // Multiply by Screen Size + translate origin to center of screen
-        const float kHalfRasterX = kRasterSize.x * 0.5f;
-        const float kHalfRasterY = kRasterSize.y * 0.5f;
-        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
-        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
-
-        assert(Vert.Z < 1.0f);
-        assert(Vert.Z > -1.0f);
-    }
-
-    Rasterizer->i_v1x = ToFixedPoint(v[0].X);
-    Rasterizer->i_v1y = ToFixedPoint(v[0].Y);
-
-    Rasterizer->i_v2x = ToFixedPoint(v[1].X);
-    Rasterizer->i_v2y = ToFixedPoint(v[1].Y);
-
-    Rasterizer->i_v3x = ToFixedPoint(v[2].X);
-    Rasterizer->i_v3y = ToFixedPoint(v[2].Y); 
+    return Transform;
 }
 
 void App::Render()
