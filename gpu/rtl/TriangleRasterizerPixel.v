@@ -2,7 +2,7 @@
 `include "FixedPoint.vh"
 `include "Vector4.vh"
 
-module TriangleRasterizer (
+module TriangleRasterizerPixel (
     // FixedPoint: x,y screen location of rasterized pixel
     input signed [31:0] i_x, i_y,
 
