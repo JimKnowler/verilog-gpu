@@ -1,6 +1,6 @@
 `include "Vector4.vh"
 
-module VectorDotProduct (
+module VectorAddVector (
     input Vector4_t i_a,
     input Vector4_t i_b,
     output Vector4_t o_result
