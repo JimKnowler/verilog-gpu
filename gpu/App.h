@@ -9,8 +9,7 @@
 #include <verilated.h>
 
 // Verilog Modules
-#include "VTriangleRasterizerPixel.h"
-#include "VTriangleRasterizerTiming.h"
+#include "VTriangleRasterizer.h"
 #include "VVertexTransform.h"
 
 #include "Matrix44.h"
@@ -35,7 +34,7 @@ private:
     void Update(float DeltaTime);
     void Render();
     void RenderFrame(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer);
-    void RasterizePixel(int x, int y);
+    void RasterizePixel();
     int GetRenderBufferIndex(int x, int y) const;
     
     void InitRotateTriangle();
@@ -48,8 +47,8 @@ private:
     void ClearBackBuffer();
 
     void StartRenderingTriangle();
-    void ResetRasterizerTiming();
-    void StepRasterizerTiming();
+    void ResetRasterizer();
+    void StepRasterizer();
 
     FMatrix44 MakeModelViewProjectionTransform() const;
 
@@ -61,8 +60,7 @@ private:
     int FrontBuffer = 0;
     std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
 
-    VTriangleRasterizerPixel Rasterizer;
-    VTriangleRasterizerTiming RasterizerTiming;
+    VTriangleRasterizer Rasterizer;
     VVertexTransform VertexTransform;
 
     float Rotation = 0.0f;

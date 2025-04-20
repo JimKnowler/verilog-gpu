@@ -89,49 +89,45 @@ void App::Update(float DeltaTime)
     // rasterize some pixels
     for (int n = 0; n < kRasterizerBatchSize; n++) 
     {
-        if (RasterizerTiming.o_valid)
-        {
-            const int x = RasterizerTiming.o_x;
-            const int y = RasterizerTiming.o_y;
-
-            RasterizePixel(x, y);
-
-            StepRasterizerTiming();
-        } else if (RasterizerTiming.o_idle)
+        if (Rasterizer.o_idle)
         {
             // frame complete
             SwapRenderBuffers();
             ClearBackBuffer();
             TickRotateTriangle();
             StartRenderingTriangle();
+
+            continue;
         }
+
+        if (Rasterizer.o_write)
+        {
+            RasterizePixel();
+        } 
+
+        StepRasterizer();
     }
 }
 
-void App::RasterizePixel(int x, int y)
+void App::RasterizePixel()
 {
-    Rasterizer.i_x = x;
-    Rasterizer.i_y = y;
-
-    Rasterizer.eval();
+    int x = Rasterizer.o_x;
+    int y = Rasterizer.o_y;
 
     const int Index = GetRenderBufferIndex(x, y);
     olc::Pixel& Pixel = GetBackBuffer()[Index];
+    
+    const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
 
-    if (Rasterizer.o_write == 1)
-    {
-        const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
+    const std::function FloatToUint8 = [](float Value) -> uint8_t {
+        return static_cast<uint8_t>(255.0f * std::clamp(Value, 0.0f, 1.0f));
+    };
 
-        const std::function FloatToUint8 = [](float Value) -> uint8_t {
-            return static_cast<uint8_t>(255.0f * std::clamp(Value, 0.0f, 1.0f));
-        };
+    const uint8_t r = FloatToUint8(Colour.X);
+    const uint8_t g = FloatToUint8(Colour.Y);
+    const uint8_t b = FloatToUint8(Colour.Z);
 
-        const uint8_t r = FloatToUint8(Colour.X);
-        const uint8_t g = FloatToUint8(Colour.Y);
-        const uint8_t b = FloatToUint8(Colour.Z);
-
-        Pixel = olc::Pixel(r, g, b);
-    }
+    Pixel = olc::Pixel(r, g, b);
 }
 
 int App::GetRenderBufferIndex(int x, int y) const
@@ -210,9 +206,9 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
 
 void App::StartRenderingTriangle()
 {
-    ResetRasterizerTiming();
+    ResetRasterizer();
     
-    // Transform Triangle Vertices + load them into the RasterizerTiming module
+    // Transform Triangle Vertices + load them into the Rasterizer module
 
     const FVector4 v[3] = {
         {-50, -60, 0, 1},
@@ -226,12 +222,6 @@ void App::StartRenderingTriangle()
         &Rasterizer.i_v1,
         &Rasterizer.i_v2,
         &Rasterizer.i_v3
-    };
-
-    VlWide<4UL>* TimingInputPorts[3] = {
-        &RasterizerTiming.i_v1,
-        &RasterizerTiming.i_v2,
-        &RasterizerTiming.i_v3
     };
 
     for (int i=0; i<3; i++) 
@@ -271,32 +261,31 @@ void App::StartRenderingTriangle()
 #endif
 
         HelperSetFixedPointVector(*InputPorts[i], Vert);
-        HelperSetFixedPointVector(*TimingInputPorts[i], Vert);
     }
 
-    RasterizerTiming.i_start = 1;
-    StepRasterizerTiming();
-    RasterizerTiming.i_start = 0;
+    Rasterizer.i_start = 1;
+    StepRasterizer();
+    Rasterizer.i_start = 0;
 }
 
-void App::ResetRasterizerTiming()
+void App::ResetRasterizer()
 {
-    RasterizerTiming.i_reset_n = 0;
-    RasterizerTiming.i_start = 0;
-    RasterizerTiming.i_clk = 0;
-    RasterizerTiming.eval();
+    Rasterizer.i_reset_n = 0;
+    Rasterizer.i_start = 0;
+    Rasterizer.i_clk = 0;
+    Rasterizer.eval();
     
-    RasterizerTiming.i_reset_n = 1;
-    RasterizerTiming.eval();
+    Rasterizer.i_reset_n = 1;
+    Rasterizer.eval();
 }
 
-void App::StepRasterizerTiming()
+void App::StepRasterizer()
 {
-    RasterizerTiming.i_clk = 1;
-    RasterizerTiming.eval();
+    Rasterizer.i_clk = 1;
+    Rasterizer.eval();
 
-    RasterizerTiming.i_clk = 0;
-    RasterizerTiming.eval();
+    Rasterizer.i_clk = 0;
+    Rasterizer.eval();
 }
 
 void App::Render()
