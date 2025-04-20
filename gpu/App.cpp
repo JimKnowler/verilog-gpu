@@ -205,10 +205,55 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
     return Transform;
 }
 
+FVector4 App::ApplyTransform(const FMatrix44 &Transform, const FVector4 Vertex)
+{
+#if 1
+    // C++ Vertex Transform
+    // ------------------------
+
+    // Transform by combined world+view+projection transform (-> Clip Space)
+    const FVector4 VertexClipSpace = Transform * Vertex;
+
+    // divide by W (-> NDC)
+    const FVector4 VertexNDC = VertexClipSpace / VertexClipSpace.W;
+
+    assert(VertexNDC.Z <= 1.0f);
+    assert(VertexNDC.Z >= -1.0f);
+    assert(VertexNDC.IsPoint());
+
+    // Multiply by Screen Size + translate origin to center of screen
+    const float kHalfRasterX = kRasterSize.x * 0.5f;
+    const float kHalfRasterY = kRasterSize.y * 0.5f;
+    
+    const FVector4 VertexScreenSpace(
+        (VertexNDC.X * kHalfRasterX) + kHalfRasterX,
+        (VertexNDC.Y * kHalfRasterY) + kHalfRasterY,
+        VertexNDC.Z,
+        VertexNDC.W
+    );
+#else
+    // Verilog Vertex Transform
+    // ----------------------------
+
+    HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
+    HelperSetFixedPointVector(VertexTransform.i_vertex, Vertex);
+    VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
+    VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
+
+    VertexTransform.eval();
+    
+    const FVector4 VertexScreenSpace = HelperGetFixedPointVector(VertexTransform.o_vertex);
+#endif
+
+    assert(VertexScreenSpace.Z <= 1.0f);
+    assert(VertexScreenSpace.Z >= -1.0f);
+    assert(VertexScreenSpace.IsPoint());
+
+    return VertexScreenSpace;
+}
+
 void App::StartRenderingTriangle()
 {    
-    // Transform Triangle Vertices + load them into the Rasterizer module
-
     const FVector4 v[3] = {
         {-50, -60, 0, 1},
         {100, 100, 0, 1},
@@ -225,41 +270,8 @@ void App::StartRenderingTriangle()
 
     for (int i=0; i<3; i++) 
     {
-        FVector4 Vert = v[i];
-
-#if 0
-        // C++ Vertex Transform
-        // ------------------------
-
-        // Transform by combined world+view+projection transform (-> Clip Space)
-        Vert = Transform * Vert;
-
-        // divide by W (-> NDC)
-        Vert = Vert / Vert.W;
-
-        // Multiply by Screen Size + translate origin to center of screen
-        const float kHalfRasterX = kRasterSize.x * 0.5f;
-        const float kHalfRasterY = kRasterSize.y * 0.5f;
-        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
-        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
-
-        assert(Vert.Z < 1.0f);
-        assert(Vert.Z > -1.0f);
-#else
-        // Verilog Vertex Transform
-        // ----------------------------
-
-        HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
-        HelperSetFixedPointVector(VertexTransform.i_vertex, Vert);
-        VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
-        VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
-
-        VertexTransform.eval();
-        
-        Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
-#endif
-
-        HelperSetFixedPointVector(*InputPorts[i], Vert);
+        const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i]);
+        HelperSetFixedPointVector(*InputPorts[i], VertexScreenSpace);
     }
 
     Rasterizer.i_start = 1;

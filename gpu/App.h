@@ -52,6 +52,7 @@ private:
     void StepRasterizer();
 
     FMatrix44 MakeModelViewProjectionTransform() const;
+    FVector4 ApplyTransform(const FMatrix44& Transform, const FVector4 Vertex);
 
     enum
     {
