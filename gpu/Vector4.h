@@ -34,6 +34,13 @@ struct FVector4
      */
     FVector4 CrossProduct(const FVector4& Other) const;
 
+    /**
+     * 2D Cross Product
+     * 
+     * Calculate the signed area of triangle formed by 2 vectors on XY plane
+     */
+    float CrossProduct2D(const FVector4& Other) const;
+
     FVector4 operator+(const FVector4& Other) const;
 
     FVector4 operator-(const FVector4& Other) const;

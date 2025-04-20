@@ -33,7 +33,7 @@ function `FixedPoint_t vector_dot_product;
 endfunction
 
 /**
- * 4d Vector Cross Product
+ * 3d Vector Cross Product
  */
 function Vector4_t vector_cross_product;
     input Vector4_t a, b;
@@ -60,6 +60,26 @@ function Vector4_t vector_cross_product;
 endfunction
 
 /**
+ * 2d Vector Cross Product
+ */
+function `FixedPoint_t vector_cross_product_2d;
+    input Vector4_t a, b;
+
+    begin 
+        vector_cross_product_2d = fixed_point_sub(
+                                    fixed_point_multiply(
+                                            a.x,
+                                            b.y
+                                    ),
+                                    fixed_point_multiply(
+                                            a.y,
+                                            b.x
+                                    )
+        );
+    end
+endfunction
+
+/**
  * 4d Vector Addition
  */
 function Vector4_t vector_add_vector;
@@ -70,6 +90,20 @@ function Vector4_t vector_add_vector;
         vector_add_vector.y = a.y + b.y;
         vector_add_vector.z = a.z + b.z;
         vector_add_vector.w = a.w + b.w;
+    end
+endfunction
+
+/**
+ * 4d Vector Addition
+ */
+function Vector4_t vector_sub_vector;
+    input Vector4_t a, b;
+
+    begin
+        vector_sub_vector.x = a.x - b.x;
+        vector_sub_vector.y = a.y - b.y;
+        vector_sub_vector.z = a.z - b.z;
+        vector_sub_vector.w = a.w - b.w;
     end
 endfunction
 

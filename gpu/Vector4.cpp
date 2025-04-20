@@ -56,6 +56,11 @@ FVector4 FVector4::CrossProduct(const FVector4 &Other) const
     );
 }
 
+float FVector4::CrossProduct2D(const FVector4 &Other) const
+{
+    return (X * Other.Y) - (Y * Other.X);
+}
+
 FVector4 FVector4::operator+(const FVector4 &Other) const
 {
     return FVector4(X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W);
