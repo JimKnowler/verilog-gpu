@@ -35,19 +35,31 @@ public:
 private:
     void Update(float DeltaTime);
     void Render();
+    void RenderFrame(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer);
     void RasterizePixel(int x, int y);
     int GetRenderBufferIndex(int x, int y) const;
     
     void InitRotateTriangle();
     void TickRotateTriangle();
+    void SwapRenderBuffers();
+
+    std::vector<olc::Pixel>& GetBackBuffer();
+    std::vector<olc::Pixel>& GetFrontBuffer();
+
+    void ClearBackBuffer();    
 
     FMatrix44 MakeModelViewProjectionTransform() const;
 
     // screen co-ordinates of pixel being rasterized
-    int x;
-    int y;
+    int x, y;
 
-    std::vector<olc::Pixel> RenderBuffer;
+    enum
+    {
+        kNumRenderBuffers = 2
+    };
+
+    int FrontBuffer = 0;
+    std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
 
     VTriangleRasterizer Rasterizer;
     VVertexTransform VertexTransform;

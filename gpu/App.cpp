@@ -6,7 +6,8 @@ namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
 
-    const olc::vi2d kRasterOrigin = {400, 150};
+    const olc::vi2d kOriginFrontBuffer = {150, 150};
+    const olc::vi2d kOriginBackBuffer = {650, 150};
     const olc::vi2d kRasterSize = {400, 400};
 
     const int kRasterizerBatchSize = 10000;
@@ -21,6 +22,8 @@ namespace {
 
         return Radians;
     }
+
+    const olc::Pixel kClearColour = olc::WHITE;
 }
 
 int main(int argc, char* argv[])
@@ -46,12 +49,14 @@ bool App::OnUserCreate()
 {
     printf("OnUserCreate\n");
 
-    RenderBuffer.resize(kRasterSize.x * kRasterSize.y, olc::WHITE);
-
+    for (int i=0; i<kNumRenderBuffers; i++)
+    {
+        RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
+    }
+    
     x = 0;
     y = 0;
 
-    // Vertex colours
     HelperSetFixedPointVector(Rasterizer.i_c1, c1);
     HelperSetFixedPointVector(Rasterizer.i_c2, c2);
     HelperSetFixedPointVector(Rasterizer.i_c3, c3);
@@ -97,6 +102,9 @@ void App::Update(float DeltaTime)
         if (y >= kRasterSize.y) {
             y = 0;
 
+            // frame complete
+            SwapRenderBuffers();
+            ClearBackBuffer();
             TickRotateTriangle();
         }
     }
@@ -110,7 +118,7 @@ void App::RasterizePixel(int x, int y)
     Rasterizer.eval();
 
     const int Index = GetRenderBufferIndex(x, y);
-    olc::Pixel& Pixel = RenderBuffer[Index];
+    olc::Pixel& Pixel = GetBackBuffer()[Index];
 
     if (Rasterizer.o_write == 1)
     {
@@ -125,8 +133,6 @@ void App::RasterizePixel(int x, int y)
         const uint8_t b = FloatToUint8(Colour.Z);
 
         Pixel = olc::Pixel(r, g, b);
-    } else {
-        Pixel = olc::BLACK;
     }
 }
 
@@ -202,8 +208,41 @@ void App::TickRotateTriangle()
 
         HelperSetFixedPointVector(*InputPorts[i], Vert);
     }
+}
 
-    
+std::vector<olc::Pixel> &App::GetBackBuffer()
+{
+    assert(FrontBuffer >= 0);
+    assert(FrontBuffer <= 1);
+
+    return RenderBuffers[1-FrontBuffer];
+}
+
+std::vector<olc::Pixel> &App::GetFrontBuffer()
+{
+    assert(FrontBuffer >= 0);
+    assert(FrontBuffer <= 1);
+
+    return RenderBuffers[FrontBuffer];
+}
+
+void App::ClearBackBuffer()
+{
+    auto& BackBuffer = GetBackBuffer();
+
+    const int kNumPixels = kRasterSize.x * kRasterSize.y;
+    for (int i=0; i<kNumPixels; i++)
+    {
+        BackBuffer[i] = kClearColour;
+    }
+}
+
+void App::SwapRenderBuffers()
+{
+    assert(FrontBuffer >= 0);
+    assert(FrontBuffer <= 1);
+
+    FrontBuffer = 1 - FrontBuffer;
 }
 
 FMatrix44 App::MakeModelViewProjectionTransform() const
@@ -230,6 +269,12 @@ void App::Render()
 {
     FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::GREY);
 
+    RenderFrame(kOriginBackBuffer, GetBackBuffer());
+    RenderFrame(kOriginFrontBuffer, GetFrontBuffer());
+}
+
+void App::RenderFrame(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
+{
     for (int x=0; x<kRasterSize.x; x++)
     {
         for (int y=0; y<kRasterSize.y; y++)
@@ -237,7 +282,7 @@ void App::Render()
             const int Index = GetRenderBufferIndex(x, y);
             const olc::Pixel Pixel = RenderBuffer[Index];
 
-            DrawRect(kRasterOrigin + olc::vi2d{x,y}, {1,1}, Pixel);
+            DrawRect(Origin + olc::vi2d{x,y}, {1,1}, Pixel);
         }
     }
 }
