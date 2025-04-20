@@ -12,10 +12,6 @@ namespace {
 
     const int kRasterizerBatchSize = 10000;
 
-    const FVector4 c1(1.0f, 0.0f, 0.0f, 1.0f);
-    const FVector4 c2(0.0f, 1.0f, 0.0f, 1.0f);
-    const FVector4 c3(0.0f, 0.0f, 1.0f, 1.0f);
-
     float DegreesToRadians(float Degrees)
     {
         float Radians = Degrees * 2.0f * M_PI / 360.0f;
@@ -256,35 +252,45 @@ void App::StartRenderingTriangle()
         {-100, 60, 0, 1}
     };
 
+    const FVector4 c[3] = {
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f, 1.0f}
+    };
+
     const FMatrix44 Transform = MakeModelViewProjectionTransform();
 
-    VlWide<4UL>* InputPorts[3] = {
+    VlWide<4UL>* VertexInputPorts[3] = {
         &Rasterizer.i_v1,
         &Rasterizer.i_v2,
         &Rasterizer.i_v3
     };
 
+    VlWide<4UL>* ColourInputPorts[3] = {
+        &Rasterizer.i_c1,
+        &Rasterizer.i_c2,
+        &Rasterizer.i_c3
+    };
+
     for (int i=0; i<3; i++) 
     {
         const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i]);
-        HelperSetFixedPointVector(*InputPorts[i], VertexScreenSpace);
-    }
+        HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
 
-    HelperSetFixedPointVector(Rasterizer.i_c1, c1);
-    HelperSetFixedPointVector(Rasterizer.i_c2, c2);
-    HelperSetFixedPointVector(Rasterizer.i_c3, c3);
+        HelperSetFixedPointVector(*ColourInputPorts[i], c[i]);
+    }
 
     Rasterizer.i_start = 1;
     StepRasterizer();
     Rasterizer.i_start = 0;
 
     // verify that rasterizer is caching vertex locations + colours
-    HelperSetFixedPointVector(Rasterizer.i_v1, FVector4::Zero());
-    HelperSetFixedPointVector(Rasterizer.i_v2, FVector4::Zero());
-    HelperSetFixedPointVector(Rasterizer.i_v3, FVector4::Zero());
-    HelperSetFixedPointVector(Rasterizer.i_c1, FVector4::Zero());
-    HelperSetFixedPointVector(Rasterizer.i_c2, FVector4::Zero());
-    HelperSetFixedPointVector(Rasterizer.i_c3, FVector4::Zero());
+    
+    for (int i=0; i<3; i++) 
+    {
+        HelperSetFixedPointVector(*VertexInputPorts[i], FVector4::Zero());
+        HelperSetFixedPointVector(*ColourInputPorts[i], FVector4::Zero());
+    }
 }
 
 void App::ResetRasterizer()
