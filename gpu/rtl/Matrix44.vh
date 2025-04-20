@@ -1,3 +1,6 @@
+`ifndef MATRIX44_VH
+`define MATRIX44_VH
+
 `include "Vector4.vh"
 
 /**
@@ -22,3 +25,5 @@ function Vector4_t matrix_multiply_vector;
         matrix_multiply_vector.w = vector_dot_product(m.rows[3], v);
     end
 endfunction
+
+`endif // MATRIX44_VH
