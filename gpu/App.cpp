@@ -207,7 +207,7 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
 
 FVector4 App::ApplyTransform(const FMatrix44 &Transform, const FVector4 Vertex)
 {
-#if 1
+#if 0
     // C++ Vertex Transform
     // ------------------------
 
