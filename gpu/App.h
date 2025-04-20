@@ -55,8 +55,10 @@ private:
     void InitRasterizer();
     void StepRasterizer();
 
-    FMatrix44 MakeModelViewProjectionTransform() const;
-    FVector4 ApplyTransform(const FMatrix44& Transform, const FVector4 Vertex);
+    FMatrix44 MakeWorldTransform() const;
+    FMatrix44 MakeViewProjectionTransform() const;
+
+    FVector4 ApplyProjectionTransform(const FMatrix44& Transform, const FVector4 Vertex);
 
     void InitModel();
     void InitModelTriangle();

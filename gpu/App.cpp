@@ -182,14 +182,21 @@ void App::SwapRenderBuffers()
     FrontBuffer = 1 - FrontBuffer;
 }
 
-FMatrix44 App::MakeModelViewProjectionTransform() const
+FMatrix44 App::MakeWorldTransform() const
 {
     // orient the model in 3D space
     const FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
     
     // rotate the model around the Y axis
     const FMatrix44 WorldTransform = FMatrix44::RotateY(Rotation);
+    
+    const FMatrix44 Transform = WorldTransform * LocalTransform;
 
+    return Transform;
+}
+
+FMatrix44 App::MakeViewProjectionTransform() const
+{
     const FVector4 Eye(0, 0, 400, 1);
     const FVector4 Center(0, 0, 0, 1);
     const FVector4 Up(0, 1, 0, 0);
@@ -201,12 +208,12 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
     const float Far = 1000.0f;
     const FMatrix44 Projection = FMatrix44::Perspective(FOV, Aspect, Near, Far);
 
-    const FMatrix44 Transform = Projection * View * WorldTransform * LocalTransform;
+    const FMatrix44 Transform = Projection * View;
 
     return Transform;
 }
 
-FVector4 App::ApplyTransform(const FMatrix44 &Transform, const FVector4 Vertex)
+FVector4 App::ApplyProjectionTransform(const FMatrix44 &Transform, const FVector4 Vertex)
 {
 #if 0
     // C++ Vertex Transform
@@ -411,7 +418,8 @@ void App::RenderTriangle(int Index)
         VertexBuffer[Indexes[2]],
     };
 
-    const FMatrix44 Transform = MakeModelViewProjectionTransform();
+    const FMatrix44 World = MakeWorldTransform();
+    const FMatrix44 ViewProjection = MakeViewProjectionTransform();
 
     VlWide<4UL>* VertexInputPorts[3] = {
         &Rasterizer.i_v1,
@@ -433,7 +441,9 @@ void App::RenderTriangle(int Index)
 
     for (int i=0; i<3; i++) 
     {
-        const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i].Position);
+        const FVector4 VertexWorldSpace = World * v[i].Position;
+        const FVector4 VertexScreenSpace = ApplyProjectionTransform(ViewProjection, VertexWorldSpace);
+        
         HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
         HelperSetFixedPointVector(*BackFaceCullInputPorts[i], VertexScreenSpace);
 
