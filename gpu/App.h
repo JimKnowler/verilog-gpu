@@ -88,6 +88,7 @@ private:
     struct FVertex
     {
         FVector4 Position;      // Local Space
+        FVector4 Normal;        // Local Space
         FVector4 Colour;
     };
 

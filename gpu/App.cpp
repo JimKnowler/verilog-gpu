@@ -2,6 +2,9 @@
 #include "FixedPoint.h"
 #include "VerilatorHelpers.h"
 
+// Enable Lighting calculation in C++
+#define ENABLE_LIGHTING 1
+
 namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
@@ -20,6 +23,14 @@ namespace {
     }
 
     const olc::Pixel kClearColour = olc::WHITE;
+
+    // View Transform
+    const FVector4 Eye(0, 0, 400, 1);               // location of camera
+    const FVector4 Center(0, 0, 0, 1);              // location that camera is pointing towards
+    const FVector4 Up(0, 1, 0, 0);                  // camera's up vector
+
+    // Directional light
+    const FVector4 kLightDirection = FVector4(1.0f, 0.5f, -1.0f).Normalise();
 }
 
 int main(int argc, char* argv[])
@@ -188,7 +199,7 @@ FMatrix44 App::MakeWorldTransform() const
     const FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
     
     // rotate the model around the Y axis
-    const FMatrix44 WorldTransform = FMatrix44::RotateY(Rotation);
+    const FMatrix44 WorldTransform = FMatrix44::RotateY(Rotation) * FMatrix44::RotateZ(Rotation);
     
     const FMatrix44 Transform = WorldTransform * LocalTransform;
 
@@ -197,12 +208,10 @@ FMatrix44 App::MakeWorldTransform() const
 
 FMatrix44 App::MakeViewProjectionTransform() const
 {
-    const FVector4 Eye(0, 0, 400, 1);
-    const FVector4 Center(0, 0, 0, 1);
-    const FVector4 Up(0, 1, 0, 0);
     const FMatrix44 View = FMatrix44::LookAt(Eye, Center, Up);
 
-    const float FOV = DegreesToRadians(45.0f);
+    const float FOVDegrees = 45.0f;
+    const float FOV = DegreesToRadians(FOVDegrees);
     const float Aspect = float(kRasterSize.x) / float(kRasterSize.y);
     const float Near = 0.1f;
     const float Far = 1000.0f;
@@ -327,6 +336,15 @@ namespace {
         { 1.0f, -1.0f,  1.0f},
         {-1.0f, -1.0f,  1.0f},
     };
+
+    std::vector<FVector4> kCubeFaceNormals = {
+        {0.0f, 0.0f, 1.0f},         // Front +z
+        {0.0f, 0.0f, -1.0f},        // Back -z
+        {-1.0f, 0.0f, 0.0f},        // Left -x
+        {1.0f, 0.0f, 0.0f},         // Right +x
+        {0.0f, 1.0f, 0.0f},         // Top +y
+        {0.0f, -1.0f, 0.0f},        // Bottom -y
+    };
 }
 
 void App::InitModelCube()
@@ -354,14 +372,21 @@ void App::InitModelCube()
     {
         const int Face = i / 4;
 
+#if ENABLE_LIGHTING
+        const FVector4 Colour = Red;
+#else
         const FVector4 Colour = kCubeFaceColours[Face];
+#endif
+        
         FVector4 Position = kCubeVertices[i] * Radius;
         Position.W = 1.0f;
+        const FVector4 Normal = kCubeFaceNormals[Face];
 
         assert(Position.IsPoint());
         
         VertexBuffer.push_back({
             .Position = Position,
+            .Normal = Normal,
             .Colour = Colour
         });
     }
@@ -442,12 +467,24 @@ void App::RenderTriangle(int Index)
     for (int i=0; i<3; i++) 
     {
         const FVector4 VertexWorldSpace = World * v[i].Position;
+        const FVector4 NormalWorldSpace = World * v[i].Normal;
+
+#if ENABLE_LIGHTING
+        const float kAmbient = 0.4f;
+        const float kDiffuse = 0.6f;
+
+        const FVector4 VertexToLight = -kLightDirection;
+        const float Lighting = kAmbient + (kDiffuse * std::max(0.0f, NormalWorldSpace.Dot(VertexToLight)));
+#else 
+        const float Lighting = 1.0f;
+#endif
+
         const FVector4 VertexScreenSpace = ApplyProjectionTransform(ViewProjection, VertexWorldSpace);
         
         HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
         HelperSetFixedPointVector(*BackFaceCullInputPorts[i], VertexScreenSpace);
 
-        HelperSetFixedPointVector(*ColourInputPorts[i], v[i].Colour);
+        HelperSetFixedPointVector(*ColourInputPorts[i], v[i].Colour * Lighting);
     }
 
     Rasterizer.i_start = 1;
@@ -462,7 +499,7 @@ void App::RenderTriangle(int Index)
         HelperSetFixedPointVector(*ColourInputPorts[i], FVector4::Zero());
     }
 
-    // evaluate back face culling, so its' available on the next tick
+    // evaluate back face culling, so it's available on the next tick
     BackFaceCull.eval();
 }
 
