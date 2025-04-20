@@ -50,9 +50,11 @@ bool App::OnUserCreate()
         RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
     }
             
+    InitModel();
     InitAnimation();
-    ResetRasterizer();
-    StartRenderingTriangle();
+    InitRasterizer();
+
+    StartRenderingModel();
 
     return true;
 }
@@ -84,11 +86,14 @@ void App::Update(float DeltaTime)
     {
         if (Rasterizer.o_idle)
         {
-            // frame complete
-            SwapRenderBuffers();
-            ClearBackBuffer();
-            TickAnimation();
-            StartRenderingTriangle();
+            if (!StartRenderingNextTriangle())
+            {
+                // frame complete
+                SwapRenderBuffers();
+                ClearBackBuffer();
+                TickAnimation();
+                StartRenderingModel();
+            }
 
             continue;
         }
@@ -136,7 +141,7 @@ void App::InitAnimation()
 void App::TickAnimation()
 {
     const float DeltaTime = 0.1f;
-    const float RotationSpeed = M_PI;
+    const float RotationSpeed = M_PI / 10.0f;
 
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
@@ -179,7 +184,7 @@ void App::SwapRenderBuffers()
 
 FMatrix44 App::MakeModelViewProjectionTransform() const
 {
-    const FMatrix44 Rotate = FMatrix44::RotateZ(Rotation);
+    const FMatrix44 Rotate = FMatrix44::RotateY(Rotation);
 
     const FVector4 Eye(0, 0, 400, 1);
     const FVector4 Center(0, 0, 0, 1);
@@ -244,18 +249,102 @@ FVector4 App::ApplyTransform(const FMatrix44 &Transform, const FVector4 Vertex)
     return VertexScreenSpace;
 }
 
-void App::StartRenderingTriangle()
-{    
-    const FVector4 v[3] = {
+void App::InitModel()
+{
+    InitModelCube();
+}
+
+void App::InitModelTriangle()
+{
+    const FVector4 Positions[3] = {
         {-50, -60, 0, 1},
         {100, 100, 0, 1},
         {-100, 60, 0, 1}
     };
 
-    const FVector4 c[3] = {
+    const FVector4 Colours[3] = {
         {1.0f, 0.0f, 0.0f, 1.0f},
         {0.0f, 1.0f, 0.0f, 1.0f},
         {0.0f, 0.0f, 1.0f, 1.0f}
+    };
+
+    for (int i=0; i<3; i++) 
+    {
+        IndexBuffer.push_back(i);
+        VertexBuffer.push_back({
+            .Position = Positions[i],
+            .Colour = Colours[i]
+        });
+    }
+}
+
+void App::InitModelCube()
+{
+    const float Radius = 50.0f;
+
+    for (int i=0; i<6; i++)
+    {
+        IndexBuffer.push_back(i);
+    }
+
+    const FVector4 Red(1.0f, 0.0f, 0.0f, 1.0f);
+    const FVector4 Green(0.0f, 1.0f, 0.0f, 1.0f);
+    const FVector4 Blue(0.0f, 0.0f, 1.0f, 1.0f);
+
+    FVertex TopLeft{
+        .Position = {-Radius, -Radius, 0, 1},
+        .Colour = Red
+    };
+
+    FVertex TopRight{
+        .Position = {Radius, -Radius, 0, 1},
+        .Colour = Red
+    };
+
+    FVertex BottomLeft{
+        .Position = {-Radius, Radius, 0, 1},
+        .Colour = Red
+    };
+
+    FVertex BottomRight{
+        .Position = {Radius, Radius, 0, 1},
+        .Colour = Red
+    };
+
+    VertexBuffer = {
+        TopLeft, TopRight, BottomLeft,
+        TopRight, BottomRight, BottomLeft
+    };
+
+    FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
+    for (FVertex& Vertex: VertexBuffer) {
+        Vertex.Position = LocalTransform * Vertex.Position;
+    }
+
+    NumTriangles = 2;
+}
+
+void App::StartRenderingModel()
+{
+    TriangleIndex = 0;
+
+    RenderTriangle(TriangleIndex);
+}
+
+void App::RenderTriangle(int Index)
+{
+    const int ArrayIndex = Index * 3;
+
+    const int Indexes[3] = {
+        IndexBuffer[ArrayIndex],
+        IndexBuffer[ArrayIndex + 1],
+        IndexBuffer[ArrayIndex + 2]
+    };
+
+    const FVertex v[3] = {
+        VertexBuffer[Indexes[0]],
+        VertexBuffer[Indexes[1]],
+        VertexBuffer[Indexes[2]],
     };
 
     const FMatrix44 Transform = MakeModelViewProjectionTransform();
@@ -274,10 +363,10 @@ void App::StartRenderingTriangle()
 
     for (int i=0; i<3; i++) 
     {
-        const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i]);
+        const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i].Position);
         HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
 
-        HelperSetFixedPointVector(*ColourInputPorts[i], c[i]);
+        HelperSetFixedPointVector(*ColourInputPorts[i], v[i].Colour);
     }
 
     Rasterizer.i_start = 1;
@@ -285,7 +374,7 @@ void App::StartRenderingTriangle()
     Rasterizer.i_start = 0;
 
     // verify that rasterizer is caching vertex locations + colours
-    
+
     for (int i=0; i<3; i++) 
     {
         HelperSetFixedPointVector(*VertexInputPorts[i], FVector4::Zero());
@@ -293,7 +382,20 @@ void App::StartRenderingTriangle()
     }
 }
 
-void App::ResetRasterizer()
+bool App::StartRenderingNextTriangle()
+{
+    TriangleIndex += 1;
+    if (TriangleIndex >= NumTriangles)
+    {
+        return false;
+    }
+
+    RenderTriangle(TriangleIndex);
+    
+    return true;
+}
+
+void App::InitRasterizer()
 {
     Rasterizer.i_reset_n = 0;
     Rasterizer.i_start = 0;

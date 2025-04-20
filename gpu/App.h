@@ -47,13 +47,21 @@ private:
 
     void ClearBackBuffer();
 
-    void StartRenderingTriangle();
-    void ResetRasterizer();
+    void StartRenderingModel();
+    bool StartRenderingNextTriangle();
+    void RenderTriangle(int Index);
+
+    void InitRasterizer();
     void StepRasterizer();
 
     FMatrix44 MakeModelViewProjectionTransform() const;
     FVector4 ApplyTransform(const FMatrix44& Transform, const FVector4 Vertex);
 
+    void InitModel();
+    void InitModelTriangle();
+    void InitModelCube();
+
+    // Render Buffers
     enum
     {
         kNumRenderBuffers = 2
@@ -62,8 +70,25 @@ private:
     int FrontBuffer = 0;
     std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
 
+    // Verilog Render pipeline
     VTriangleRasterizer Rasterizer;
     VVertexTransform VertexTransform;
 
+    // Animation
     float Rotation = 0.0f;
+
+    // Model Description
+    int NumTriangles = 0;
+    std::vector<int> IndexBuffer;
+    
+    struct FVertex
+    {
+        FVector4 Position;      // Local Space
+        FVector4 Colour;
+    };
+
+    std::vector<FVertex> VertexBuffer;
+
+    // Model Rendering
+    int TriangleIndex = 0;
 };
