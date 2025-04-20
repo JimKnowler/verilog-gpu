@@ -25,6 +25,7 @@ add_executable(Main
     gpu/VerilatorHelpers.cpp
 )
 verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
+verilate(Main SOURCES gpu/rtl/TriangleRasterizerTiming.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(Main PRIVATE

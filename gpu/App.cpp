@@ -54,14 +54,12 @@ bool App::OnUserCreate()
         RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
     }
     
-    x = 0;
-    y = 0;
-
     HelperSetFixedPointVector(Rasterizer.i_c1, c1);
     HelperSetFixedPointVector(Rasterizer.i_c2, c2);
     HelperSetFixedPointVector(Rasterizer.i_c3, c3);
         
     InitRotateTriangle();
+    StartRenderingTriangle();
 
     return true;
 }
@@ -91,21 +89,21 @@ void App::Update(float DeltaTime)
     // rasterize some pixels
     for (int n = 0; n < kRasterizerBatchSize; n++) 
     {
-        RasterizePixel(x, y);
+        if (RasterizerTiming.o_valid)
+        {
+            const int x = RasterizerTiming.o_x;
+            const int y = RasterizerTiming.o_y;
 
-        x += 1;
-        if (x >= kRasterSize.x) {
-            x = 0;
-            y += 1;
-        }
+            RasterizePixel(x, y);
 
-        if (y >= kRasterSize.y) {
-            y = 0;
-
+            StepRasterizerTiming();
+        } else if (RasterizerTiming.o_idle)
+        {
             // frame complete
             SwapRenderBuffers();
             ClearBackBuffer();
             TickRotateTriangle();
+            StartRenderingTriangle();
         }
     }
 }
@@ -144,8 +142,6 @@ int App::GetRenderBufferIndex(int x, int y) const
 void App::InitRotateTriangle()
 {
     Rotation = 0.0f;
-
-    TickRotateTriangle();
 }
 
 void App::TickRotateTriangle()
@@ -155,59 +151,6 @@ void App::TickRotateTriangle()
 
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
-
-    const FVector4 v[3] = {
-        {-50, -60, 0, 1},
-        {100, 100, 0, 1},
-        {-100, 60, 0, 1}
-    };
-
-    const FMatrix44 Transform = MakeModelViewProjectionTransform();
-
-    VlWide<4UL>* InputPorts[3] = {
-        &Rasterizer.i_v1,
-        &Rasterizer.i_v2,
-        &Rasterizer.i_v3
-    };
-
-    for (int i=0; i<3; i++) 
-    {
-        FVector4 Vert = v[i];
-
-#if 0
-        // C++ Vertex Transform
-        // ------------------------
-
-        // Transform by combined world+view+projection transform (-> Clip Space)
-        Vert = Transform * Vert;
-
-        // divide by W (-> NDC)
-        Vert = Vert / Vert.W;
-
-        // Multiply by Screen Size + translate origin to center of screen
-        const float kHalfRasterX = kRasterSize.x * 0.5f;
-        const float kHalfRasterY = kRasterSize.y * 0.5f;
-        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
-        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
-
-        assert(Vert.Z < 1.0f);
-        assert(Vert.Z > -1.0f);
-#else
-        // Verilog Vertex Transform
-        // ----------------------------
-
-        HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
-        HelperSetFixedPointVector(VertexTransform.i_vertex, Vert);
-        VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
-        VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
-
-        VertexTransform.eval();
-        
-        Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
-#endif
-
-        HelperSetFixedPointVector(*InputPorts[i], Vert);
-    }
 }
 
 std::vector<olc::Pixel> &App::GetBackBuffer()
@@ -263,6 +206,97 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
     const FMatrix44 Transform = Projection * View * Rotate;
 
     return Transform;
+}
+
+void App::StartRenderingTriangle()
+{
+    ResetRasterizerTiming();
+    
+    // Transform Triangle Vertices + load them into the RasterizerTiming module
+
+    const FVector4 v[3] = {
+        {-50, -60, 0, 1},
+        {100, 100, 0, 1},
+        {-100, 60, 0, 1}
+    };
+
+    const FMatrix44 Transform = MakeModelViewProjectionTransform();
+
+    VlWide<4UL>* InputPorts[3] = {
+        &Rasterizer.i_v1,
+        &Rasterizer.i_v2,
+        &Rasterizer.i_v3
+    };
+
+    VlWide<4UL>* TimingInputPorts[3] = {
+        &RasterizerTiming.i_v1,
+        &RasterizerTiming.i_v2,
+        &RasterizerTiming.i_v3
+    };
+
+    for (int i=0; i<3; i++) 
+    {
+        FVector4 Vert = v[i];
+
+#if 0
+        // C++ Vertex Transform
+        // ------------------------
+
+        // Transform by combined world+view+projection transform (-> Clip Space)
+        Vert = Transform * Vert;
+
+        // divide by W (-> NDC)
+        Vert = Vert / Vert.W;
+
+        // Multiply by Screen Size + translate origin to center of screen
+        const float kHalfRasterX = kRasterSize.x * 0.5f;
+        const float kHalfRasterY = kRasterSize.y * 0.5f;
+        Vert.X = (Vert.X * kHalfRasterX) + kHalfRasterX;
+        Vert.Y = (Vert.Y * kHalfRasterY) + kHalfRasterY;
+
+        assert(Vert.Z < 1.0f);
+        assert(Vert.Z > -1.0f);
+#else
+        // Verilog Vertex Transform
+        // ----------------------------
+
+        HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
+        HelperSetFixedPointVector(VertexTransform.i_vertex, Vert);
+        VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
+        VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
+
+        VertexTransform.eval();
+        
+        Vert = HelperGetFixedPointVector(VertexTransform.o_vertex);
+#endif
+
+        HelperSetFixedPointVector(*InputPorts[i], Vert);
+        HelperSetFixedPointVector(*TimingInputPorts[i], Vert);
+    }
+
+    RasterizerTiming.i_start = 1;
+    StepRasterizerTiming();
+    RasterizerTiming.i_start = 0;
+}
+
+void App::ResetRasterizerTiming()
+{
+    RasterizerTiming.i_reset_n = 0;
+    RasterizerTiming.i_start = 0;
+    RasterizerTiming.i_clk = 0;
+    RasterizerTiming.eval();
+    
+    RasterizerTiming.i_reset_n = 1;
+    RasterizerTiming.eval();
+}
+
+void App::StepRasterizerTiming()
+{
+    RasterizerTiming.i_clk = 1;
+    RasterizerTiming.eval();
+
+    RasterizerTiming.i_clk = 0;
+    RasterizerTiming.eval();
 }
 
 void App::Render()
