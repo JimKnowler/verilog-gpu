@@ -9,7 +9,7 @@
 #include <verilated.h>
 
 // Verilog Modules
-#include "VTriangleRasterizer.h"
+#include "VTriangleRasterizerPixel.h"
 #include "VTriangleRasterizerTiming.h"
 #include "VVertexTransform.h"
 
@@ -61,7 +61,7 @@ private:
     int FrontBuffer = 0;
     std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
 
-    VTriangleRasterizer Rasterizer;
+    VTriangleRasterizerPixel Rasterizer;
     VTriangleRasterizerTiming RasterizerTiming;
     VVertexTransform VertexTransform;
 
