@@ -84,7 +84,7 @@ void App::Update(float DeltaTime)
     // rasterize some pixels
     for (int n = 0; n < kRasterizerBatchSize; n++) 
     {
-        if (Rasterizer.o_idle)
+        if (Rasterizer.o_idle || BackFaceCull.o_result)
         {
             if (!StartRenderingNextTriangle())
             {
@@ -96,7 +96,7 @@ void App::Update(float DeltaTime)
             }
 
             continue;
-        }
+        }        
 
         if (Rasterizer.o_write)
         {
@@ -419,6 +419,12 @@ void App::RenderTriangle(int Index)
         &Rasterizer.i_v3
     };
 
+    VlWide<4UL>* BackFaceCullInputPorts[3] = {
+        &BackFaceCull.i_v1,
+        &BackFaceCull.i_v2,
+        &BackFaceCull.i_v3
+    };
+
     VlWide<4UL>* ColourInputPorts[3] = {
         &Rasterizer.i_c1,
         &Rasterizer.i_c2,
@@ -429,6 +435,7 @@ void App::RenderTriangle(int Index)
     {
         const FVector4 VertexScreenSpace = ApplyTransform(Transform, v[i].Position);
         HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
+        HelperSetFixedPointVector(*BackFaceCullInputPorts[i], VertexScreenSpace);
 
         HelperSetFixedPointVector(*ColourInputPorts[i], v[i].Colour);
     }
@@ -444,6 +451,9 @@ void App::RenderTriangle(int Index)
         HelperSetFixedPointVector(*VertexInputPorts[i], FVector4::Zero());
         HelperSetFixedPointVector(*ColourInputPorts[i], FVector4::Zero());
     }
+
+    // evaluate back face culling, so its' available on the next tick
+    BackFaceCull.eval();
 }
 
 bool App::StartRenderingNextTriangle()

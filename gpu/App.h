@@ -10,6 +10,7 @@
 
 // Verilog Modules
 #include "VTriangleRasterizer.h"
+#include "VTriangleBackFaceCull.h"
 #include "VVertexTransform.h"
 
 #include "Matrix44.h"
@@ -73,6 +74,7 @@ private:
     // Verilog Render pipeline
     VTriangleRasterizer Rasterizer;
     VVertexTransform VertexTransform;
+    VTriangleBackFaceCull BackFaceCull;
 
     // Animation
     float Rotation = 0.0f;
