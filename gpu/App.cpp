@@ -53,11 +53,7 @@ bool App::OnUserCreate()
     {
         RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
     }
-    
-    HelperSetFixedPointVector(Rasterizer.i_c1, c1);
-    HelperSetFixedPointVector(Rasterizer.i_c2, c2);
-    HelperSetFixedPointVector(Rasterizer.i_c3, c3);
-        
+            
     InitAnimation();
     ResetRasterizer();
     StartRenderingTriangle();
@@ -274,9 +270,21 @@ void App::StartRenderingTriangle()
         HelperSetFixedPointVector(*InputPorts[i], VertexScreenSpace);
     }
 
+    HelperSetFixedPointVector(Rasterizer.i_c1, c1);
+    HelperSetFixedPointVector(Rasterizer.i_c2, c2);
+    HelperSetFixedPointVector(Rasterizer.i_c3, c3);
+
     Rasterizer.i_start = 1;
     StepRasterizer();
     Rasterizer.i_start = 0;
+
+    // verify that rasterizer is caching vertex locations + colours
+    HelperSetFixedPointVector(Rasterizer.i_v1, FVector4::Zero());
+    HelperSetFixedPointVector(Rasterizer.i_v2, FVector4::Zero());
+    HelperSetFixedPointVector(Rasterizer.i_v3, FVector4::Zero());
+    HelperSetFixedPointVector(Rasterizer.i_c1, FVector4::Zero());
+    HelperSetFixedPointVector(Rasterizer.i_c2, FVector4::Zero());
+    HelperSetFixedPointVector(Rasterizer.i_c3, FVector4::Zero());
 }
 
 void App::ResetRasterizer()
