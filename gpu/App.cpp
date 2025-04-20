@@ -59,6 +59,7 @@ bool App::OnUserCreate()
     HelperSetFixedPointVector(Rasterizer.i_c3, c3);
         
     InitAnimation();
+    ResetRasterizer();
     StartRenderingTriangle();
 
     return true;
@@ -205,9 +206,7 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
 }
 
 void App::StartRenderingTriangle()
-{
-    ResetRasterizer();
-    
+{    
     // Transform Triangle Vertices + load them into the Rasterizer module
 
     const FVector4 v[3] = {
