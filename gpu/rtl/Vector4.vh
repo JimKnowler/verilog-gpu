@@ -1,3 +1,6 @@
+`ifndef VECTOR4_VH
+`define VECTOR4_VH
+
 `include "FixedPoint.vh"
 
 /**
@@ -63,3 +66,5 @@ function Vector4_t vector_divide_scalar;
         vector_divide_scalar.w = fixed_point_divide(a.w, scalar);
     end
 endfunction
+
+`endif // VECTOR4_VH
