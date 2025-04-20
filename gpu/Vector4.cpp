@@ -71,6 +71,16 @@ FVector4 FVector4::operator-(const FVector4 &Other) const
     return FVector4(X - Other.X, Y - Other.Y, Z - Other.Z, W - Other.W);
 }
 
+FVector4 FVector4::operator-() const
+{
+    return FVector4(
+        -X, 
+        -Y,
+        -Z,
+        -W
+    );
+}
+
 FVector4 FVector4::operator*(float Scalar) const
 {
     return FVector4(X * Scalar, Y * Scalar, Z * Scalar, W * Scalar);
