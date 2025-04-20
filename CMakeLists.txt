@@ -69,6 +69,7 @@ add_executable(TestRtl
     test/VectorMultiplyScalar.test.cpp
     test/VectorDivideScalar.test.cpp
     test/VectorSelect.test.cpp
+    test/VectorCrossProduct.test.cpp
     test/VertexTransform.test.cpp
     gpu/Matrix44.cpp
     gpu/Vector4.cpp
@@ -81,6 +82,7 @@ verilate(TestRtl SOURCES gpu/rtl/FixedPointMultiply.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/FixedPointDivide.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/MatrixMultiplyVector.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorDotProduct.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/VectorCrossProduct.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorAddVector.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorMultiplyScalar.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorDivideScalar.v INCLUDE_DIRS gpu/rtl)

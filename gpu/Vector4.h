@@ -70,4 +70,8 @@ struct FVector4
      * Intended for development/debug purposes.
      */
     std::string ToString() const;
+
+    static FVector4 XAxis();
+    static FVector4 YAxis();
+    static FVector4 ZAxis();
 };

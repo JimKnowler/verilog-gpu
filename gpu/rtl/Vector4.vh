@@ -24,6 +24,24 @@ function `FixedPoint_t vector_dot_product;
 endfunction
 
 /**
+ * 4d Vector Cross Product
+ */
+function Vector4_t vector_cross_product;
+    input Vector4_t a, b;
+
+    begin
+        vector_cross_product.x = fixed_point_multiply(a.y, b.z) - fixed_point_multiply(a.z, b.y);
+        vector_cross_product.y = fixed_point_multiply(a.z, b.x) - fixed_point_multiply(a.x, b.z);
+        vector_cross_product.z = fixed_point_multiply(a.x, b.y) - fixed_point_multiply(a.y, b.x);
+        
+        // cross product only applies to directions
+        vector_cross_product.w = 0;
+    end
+endfunction
+
+
+
+/**
  * 4d Vector Addition
  */
 function Vector4_t vector_add_vector;

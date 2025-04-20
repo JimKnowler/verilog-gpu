@@ -8,6 +8,18 @@ namespace
     static const FVector4 kZeroVector4(
         0.0f, 0.0f, 0.0f, 0.0f
     );
+
+    static const FVector4 kAxisX(
+        1.0f, 0.0f, 0.0f, 0.0f
+    );
+
+    static const FVector4 kAxisY(
+        0.0f, 1.0f, 0.0f, 0.0f
+    );
+
+    static const FVector4 kAxisZ(
+        0.0f, 0.0f, 1.0f, 0.0f
+    );
 }
 
 FVector4::FVector4()
@@ -115,4 +127,19 @@ std::string FVector4::ToString() const
     std::string Str = Buffer;
 
     return Str;
+}
+
+FVector4 FVector4::XAxis()
+{
+    return kAxisX;
+}
+
+FVector4 FVector4::YAxis()
+{
+    return kAxisY;
+}
+
+FVector4 FVector4::ZAxis()
+{
+    return kAxisZ;
 }
