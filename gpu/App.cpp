@@ -58,7 +58,7 @@ bool App::OnUserCreate()
     HelperSetFixedPointVector(Rasterizer.i_c2, c2);
     HelperSetFixedPointVector(Rasterizer.i_c3, c3);
         
-    InitRotateTriangle();
+    InitAnimation();
     StartRenderingTriangle();
 
     return true;
@@ -94,7 +94,7 @@ void App::Update(float DeltaTime)
             // frame complete
             SwapRenderBuffers();
             ClearBackBuffer();
-            TickRotateTriangle();
+            TickAnimation();
             StartRenderingTriangle();
 
             continue;
@@ -102,19 +102,19 @@ void App::Update(float DeltaTime)
 
         if (Rasterizer.o_write)
         {
-            RasterizePixel();
+            RenderPixelFromRasterizerToBackBuffer();
         } 
 
         StepRasterizer();
     }
 }
 
-void App::RasterizePixel()
+void App::RenderPixelFromRasterizerToBackBuffer()
 {
     int x = Rasterizer.o_x;
     int y = Rasterizer.o_y;
 
-    const int Index = GetRenderBufferIndex(x, y);
+    const int Index = GetRenderBufferIndexForPixel(x, y);
     olc::Pixel& Pixel = GetBackBuffer()[Index];
     
     const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
@@ -130,17 +130,17 @@ void App::RasterizePixel()
     Pixel = olc::Pixel(r, g, b);
 }
 
-int App::GetRenderBufferIndex(int x, int y) const
+int App::GetRenderBufferIndexForPixel(int x, int y) const
 {
     return (y * kRasterSize.x) + x;
 }
 
-void App::InitRotateTriangle()
+void App::InitAnimation()
 {
     Rotation = 0.0f;
 }
 
-void App::TickRotateTriangle()
+void App::TickAnimation()
 {
     const float DeltaTime = 0.1f;
     const float RotationSpeed = M_PI;
@@ -292,17 +292,17 @@ void App::Render()
 {
     FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::GREY);
 
-    RenderFrame(kOriginBackBuffer, GetBackBuffer());
-    RenderFrame(kOriginFrontBuffer, GetFrontBuffer());
+    DrawRenderBuffer(kOriginBackBuffer, GetBackBuffer());
+    DrawRenderBuffer(kOriginFrontBuffer, GetFrontBuffer());
 }
 
-void App::RenderFrame(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
+void App::DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
 {
     for (int x=0; x<kRasterSize.x; x++)
     {
         for (int y=0; y<kRasterSize.y; y++)
         {
-            const int Index = GetRenderBufferIndex(x, y);
+            const int Index = GetRenderBufferIndexForPixel(x, y);
             const olc::Pixel Pixel = RenderBuffer[Index];
 
             DrawRect(Origin + olc::vi2d{x,y}, {1,1}, Pixel);

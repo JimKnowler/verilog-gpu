@@ -33,16 +33,17 @@ public:
 private:
     void Update(float DeltaTime);
     void Render();
-    void RenderFrame(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer);
-    void RasterizePixel();
-    int GetRenderBufferIndex(int x, int y) const;
     
-    void InitRotateTriangle();
-    void TickRotateTriangle();
-    void SwapRenderBuffers();
-
+    void DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer);
+    void RenderPixelFromRasterizerToBackBuffer();
+    
+    void InitAnimation();
+    void TickAnimation();
+    
+    int GetRenderBufferIndexForPixel(int x, int y) const;
     std::vector<olc::Pixel>& GetBackBuffer();
     std::vector<olc::Pixel>& GetFrontBuffer();
+    void SwapRenderBuffers();
 
     void ClearBackBuffer();
 
