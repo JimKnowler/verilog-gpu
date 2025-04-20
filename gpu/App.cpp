@@ -141,7 +141,7 @@ void App::InitAnimation()
 void App::TickAnimation()
 {
     const float DeltaTime = 0.1f;
-    const float RotationSpeed = M_PI / 10.0f;
+    const float RotationSpeed = M_PI / 2.0f;
 
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
@@ -184,7 +184,11 @@ void App::SwapRenderBuffers()
 
 FMatrix44 App::MakeModelViewProjectionTransform() const
 {
-    const FMatrix44 Rotate = FMatrix44::RotateY(Rotation);
+    // orient the model in 3D space
+    const FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
+    
+    // rotate the model around the Y axis
+    const FMatrix44 WorldTransform = FMatrix44::RotateY(Rotation);
 
     const FVector4 Eye(0, 0, 400, 1);
     const FVector4 Center(0, 0, 0, 1);
@@ -197,7 +201,7 @@ FMatrix44 App::MakeModelViewProjectionTransform() const
     const float Far = 1000.0f;
     const FMatrix44 Projection = FMatrix44::Perspective(FOV, Aspect, Near, Far);
 
-    const FMatrix44 Transform = Projection * View * Rotate;
+    const FMatrix44 Transform = Projection * View * WorldTransform * LocalTransform;
 
     return Transform;
 }
@@ -278,50 +282,110 @@ void App::InitModelTriangle()
     }
 }
 
+namespace {
+    std::vector<FVector4> kCubeVertices = {
+        // Front face (+Z)
+        {-1.0f, -1.0f,  1.0f},
+        { 1.0f, -1.0f,  1.0f},
+        { 1.0f,  1.0f,  1.0f},
+        {-1.0f,  1.0f,  1.0f},
+
+        // Back face (-Z)
+        { 1.0f, -1.0f, -1.0f},
+        {-1.0f, -1.0f, -1.0f},
+        {-1.0f,  1.0f, -1.0f},
+        { 1.0f,  1.0f, -1.0f},
+
+        // Left face (-X)
+        {-1.0f, -1.0f, -1.0f},
+        {-1.0f, -1.0f,  1.0f},
+        {-1.0f,  1.0f,  1.0f},
+        {-1.0f,  1.0f, -1.0f},
+
+        // Right face (+X)
+        { 1.0f, -1.0f,  1.0f},
+        { 1.0f, -1.0f, -1.0f},
+        { 1.0f,  1.0f, -1.0f},
+        { 1.0f,  1.0f,  1.0f},
+
+        // Top face (+Y)
+        {-1.0f,  1.0f,  1.0f},
+        { 1.0f,  1.0f,  1.0f},
+        { 1.0f,  1.0f, -1.0f},
+        {-1.0f,  1.0f, -1.0f},
+
+        // Bottom face (-Y)
+        {-1.0f, -1.0f, -1.0f},
+        { 1.0f, -1.0f, -1.0f},
+        { 1.0f, -1.0f,  1.0f},
+        {-1.0f, -1.0f,  1.0f},
+    };
+}
+
 void App::InitModelCube()
 {
     const float Radius = 50.0f;
 
-    for (int i=0; i<6; i++)
-    {
-        IndexBuffer.push_back(i);
-    }
-
     const FVector4 Red(1.0f, 0.0f, 0.0f, 1.0f);
     const FVector4 Green(0.0f, 1.0f, 0.0f, 1.0f);
     const FVector4 Blue(0.0f, 0.0f, 1.0f, 1.0f);
+    const FVector4 Yellow(1.0f, 1.0f, 0.0f, 1.0f);
+    const FVector4 Purple(1.0f, 0.0f, 1.0f, 1.0f);
+    const FVector4 Gray(0.4f, 0.4f, 0.4f, 1.0f);
 
-    FVertex TopLeft{
-        .Position = {-Radius, -Radius, 0, 1},
-        .Colour = Red
+    const FVector4 kCubeFaceColours[6] = {
+        Red,
+        Green,
+        Blue,
+        Yellow,
+        Purple,
+        Gray
     };
 
-    FVertex TopRight{
-        .Position = {Radius, -Radius, 0, 1},
-        .Colour = Red
-    };
+    const int NumVertices = kCubeVertices.size();
+    for (int i=0; i<NumVertices; i++)
+    {
+        const int Face = i / 4;
 
-    FVertex BottomLeft{
-        .Position = {-Radius, Radius, 0, 1},
-        .Colour = Red
-    };
+        const FVector4 Colour = kCubeFaceColours[Face];
+        FVector4 Position = kCubeVertices[i] * Radius;
+        Position.W = 1.0f;
 
-    FVertex BottomRight{
-        .Position = {Radius, Radius, 0, 1},
-        .Colour = Red
-    };
-
-    VertexBuffer = {
-        TopLeft, TopRight, BottomLeft,
-        TopRight, BottomRight, BottomLeft
-    };
-
-    FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
-    for (FVertex& Vertex: VertexBuffer) {
-        Vertex.Position = LocalTransform * Vertex.Position;
+        assert(Position.IsPoint());
+        
+        VertexBuffer.push_back({
+            .Position = Position,
+            .Colour = Colour
+        });
     }
 
-    NumTriangles = 2;
+    NumTriangles = 12;
+
+    IndexBuffer = {
+        // Front face
+        0,  1,  2,
+        0,  2,  3,
+
+        // Back face
+        4,  5,  6,
+        4,  6,  7,
+
+        // Left face
+        8,  9, 10,
+        8, 10, 11,
+
+        // Right face
+        12, 13, 14,
+        12, 14, 15,
+
+        // Top face
+        16, 17, 18,
+        16, 18, 19,
+
+        // Bottom face
+        20, 21, 22,
+        20, 22, 23,
+    };
 }
 
 void App::StartRenderingModel()
