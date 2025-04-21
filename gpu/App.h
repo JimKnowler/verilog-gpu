@@ -13,7 +13,9 @@
 #include "VTriangleBackFaceCull.h"
 #include "VVertexTransform.h"
 
+// Math
 #include "Matrix44.h"
+#include "Vertex.h"
 
 class App : public olc::PixelGameEngine
 {
@@ -61,10 +63,10 @@ private:
     FVector4 ApplyProjectionTransform(const FMatrix44& Transform, const FVector4 Vertex);
 
     void InitModel();
-    void InitModelTriangle();
-    void InitModelCube();
 
+    ///////////////////////////////////
     // Render Buffers
+    
     enum
     {
         kNumRenderBuffers = 2
@@ -73,27 +75,32 @@ private:
     int FrontBuffer = 0;
     std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
 
+    ///////////////////////////////////
     // Verilog Render pipeline
+    
     VTriangleRasterizer Rasterizer;
     VVertexTransform VertexTransform;
     VTriangleBackFaceCull BackFaceCull;
 
+    std::vector<VlWide<4UL>*> VertexInputPorts;
+    std::vector<VlWide<4UL>*> BackFaceCullInputPorts;
+    std::vector<VlWide<4UL>*> ColourInputPorts;
+
+    ///////////////////////////////////
     // Animation
+    
     float Rotation = 0.0f;
 
+    ///////////////////////////////////
     // Model Description
+
     int NumTriangles = 0;
-    std::vector<int> IndexBuffer;
     
-    struct FVertex
-    {
-        FVector4 Position;      // Local Space
-        FVector4 Normal;        // Local Space
-        FVector4 Colour;
-    };
-
     std::vector<FVertex> VertexBuffer;
+    std::vector<uint32_t> IndexBuffer;
 
+    ///////////////////////////////////
     // Model Rendering
+
     int TriangleIndex = 0;
 };

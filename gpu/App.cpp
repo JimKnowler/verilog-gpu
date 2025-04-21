@@ -2,9 +2,6 @@
 #include "FixedPoint.h"
 #include "VerilatorHelpers.h"
 
-// Enable Lighting calculation in C++
-#define ENABLE_LIGHTING 1
-
 namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
@@ -50,6 +47,24 @@ int main(int argc, char* argv[])
 App::App() 
 {
     sAppName = "verilog-gpu";
+
+    VertexInputPorts = {
+        &Rasterizer.i_v1,
+        &Rasterizer.i_v2,
+        &Rasterizer.i_v3
+    };
+
+    BackFaceCullInputPorts = {
+        &BackFaceCull.i_v1,
+        &BackFaceCull.i_v2,
+        &BackFaceCull.i_v3
+    };
+
+    ColourInputPorts = {
+        &Rasterizer.i_c1,
+        &Rasterizer.i_c2,
+        &Rasterizer.i_c3
+    };
 }
 
 bool App::OnUserCreate() 
@@ -224,34 +239,6 @@ FMatrix44 App::MakeViewProjectionTransform() const
 
 FVector4 App::ApplyProjectionTransform(const FMatrix44 &Transform, const FVector4 Vertex)
 {
-#if 0
-    // C++ Vertex Transform
-    // ------------------------
-
-    // Transform by combined world+view+projection transform (-> Clip Space)
-    const FVector4 VertexClipSpace = Transform * Vertex;
-
-    // divide by W (-> NDC)
-    const FVector4 VertexNDC = VertexClipSpace / VertexClipSpace.W;
-
-    assert(VertexNDC.Z <= 1.0f);
-    assert(VertexNDC.Z >= -1.0f);
-    assert(VertexNDC.IsPoint());
-
-    // Multiply by Screen Size + translate origin to center of screen
-    const float kHalfRasterX = kRasterSize.x * 0.5f;
-    const float kHalfRasterY = kRasterSize.y * 0.5f;
-    
-    const FVector4 VertexScreenSpace(
-        (VertexNDC.X * kHalfRasterX) + kHalfRasterX,
-        (VertexNDC.Y * kHalfRasterY) + kHalfRasterY,
-        VertexNDC.Z,
-        VertexNDC.W
-    );
-#else
-    // Verilog Vertex Transform
-    // ----------------------------
-
     HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
     HelperSetFixedPointVector(VertexTransform.i_vertex, Vertex);
     VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
@@ -260,7 +247,6 @@ FVector4 App::ApplyProjectionTransform(const FMatrix44 &Transform, const FVector
     VertexTransform.eval();
     
     const FVector4 VertexScreenSpace = HelperGetFixedPointVector(VertexTransform.o_vertex);
-#endif
 
     assert(VertexScreenSpace.Z <= 1.0f);
     assert(VertexScreenSpace.Z >= -1.0f);
@@ -269,37 +255,9 @@ FVector4 App::ApplyProjectionTransform(const FMatrix44 &Transform, const FVector
     return VertexScreenSpace;
 }
 
-void App::InitModel()
+namespace 
 {
-    InitModelCube();
-}
-
-void App::InitModelTriangle()
-{
-    const FVector4 Positions[3] = {
-        {-50, -60, 0, 1},
-        {100, 100, 0, 1},
-        {-100, 60, 0, 1}
-    };
-
-    const FVector4 Colours[3] = {
-        {1.0f, 0.0f, 0.0f, 1.0f},
-        {0.0f, 1.0f, 0.0f, 1.0f},
-        {0.0f, 0.0f, 1.0f, 1.0f}
-    };
-
-    for (int i=0; i<3; i++) 
-    {
-        IndexBuffer.push_back(i);
-        VertexBuffer.push_back({
-            .Position = Positions[i],
-            .Colour = Colours[i]
-        });
-    }
-}
-
-namespace {
-    std::vector<FVector4> kCubeVertices = {
+    const std::vector<FVector4> kCubeVertices = {
         // Front face (+Z)
         {-1.0f, -1.0f,  1.0f},
         { 1.0f, -1.0f,  1.0f},
@@ -337,7 +295,7 @@ namespace {
         {-1.0f, -1.0f,  1.0f},
     };
 
-    std::vector<FVector4> kCubeFaceNormals = {
+    const std::vector<FVector4> kCubeFaceNormals = {
         {0.0f, 0.0f, 1.0f},         // Front +z
         {0.0f, 0.0f, -1.0f},        // Back -z
         {-1.0f, 0.0f, 0.0f},        // Left -x
@@ -345,44 +303,35 @@ namespace {
         {0.0f, 1.0f, 0.0f},         // Top +y
         {0.0f, -1.0f, 0.0f},        // Bottom -y
     };
-}
 
-void App::InitModelCube()
-{
-    const float Radius = 50.0f;
+    const float kCubeRadius = 50.0f;
 
     const FVector4 Red(1.0f, 0.0f, 0.0f, 1.0f);
     const FVector4 Green(0.0f, 1.0f, 0.0f, 1.0f);
     const FVector4 Blue(0.0f, 0.0f, 1.0f, 1.0f);
-    const FVector4 Yellow(1.0f, 1.0f, 0.0f, 1.0f);
-    const FVector4 Purple(1.0f, 0.0f, 1.0f, 1.0f);
-    const FVector4 Gray(0.4f, 0.4f, 0.4f, 1.0f);
 
     const FVector4 kCubeFaceColours[6] = {
         Red,
         Green,
-        Blue,
-        Yellow,
-        Purple,
-        Gray
+        Blue
     };
+}
 
+void App::InitModel()
+{
     const int NumVertices = kCubeVertices.size();
+
     for (int i=0; i<NumVertices; i++)
     {
         const int Face = i / 4;
-
-#if ENABLE_LIGHTING
-        const FVector4 Colour = Red;
-#else
-        const FVector4 Colour = kCubeFaceColours[Face];
-#endif
+        const FVector4 Colour = kCubeFaceColours[Face / 2];
         
-        FVector4 Position = kCubeVertices[i] * Radius;
+        FVector4 Position = kCubeVertices[i] * kCubeRadius;
         Position.W = 1.0f;
-        const FVector4 Normal = kCubeFaceNormals[Face];
-
         assert(Position.IsPoint());
+
+        const FVector4 Normal = kCubeFaceNormals[Face];
+        assert(Normal.IsDirection());        
         
         VertexBuffer.push_back({
             .Position = Position,
@@ -427,65 +376,42 @@ void App::StartRenderingModel()
     RenderTriangle(TriangleIndex);
 }
 
-void App::RenderTriangle(int Index)
+void App::RenderTriangle(int TriangleIndex)
 {
-    const int ArrayIndex = Index * 3;
+    const int ArrayBufferIndex = TriangleIndex * 3;
 
-    const int Indexes[3] = {
-        IndexBuffer[ArrayIndex],
-        IndexBuffer[ArrayIndex + 1],
-        IndexBuffer[ArrayIndex + 2]
-    };
+    std::vector<FVertex> Vertices(3);
 
-    const FVertex v[3] = {
-        VertexBuffer[Indexes[0]],
-        VertexBuffer[Indexes[1]],
-        VertexBuffer[Indexes[2]],
-    };
+    for (int i=0; i<3; i++)
+    {
+        const int VertexBufferIndex = IndexBuffer[ArrayBufferIndex + i];
+        const FVertex& Vertex = VertexBuffer[VertexBufferIndex];
+        Vertices[i] = Vertex;
+    }
 
     const FMatrix44 World = MakeWorldTransform();
     const FMatrix44 ViewProjection = MakeViewProjectionTransform();
 
-    VlWide<4UL>* VertexInputPorts[3] = {
-        &Rasterizer.i_v1,
-        &Rasterizer.i_v2,
-        &Rasterizer.i_v3
-    };
-
-    VlWide<4UL>* BackFaceCullInputPorts[3] = {
-        &BackFaceCull.i_v1,
-        &BackFaceCull.i_v2,
-        &BackFaceCull.i_v3
-    };
-
-    VlWide<4UL>* ColourInputPorts[3] = {
-        &Rasterizer.i_c1,
-        &Rasterizer.i_c2,
-        &Rasterizer.i_c3
-    };
-
     for (int i=0; i<3; i++) 
     {
-        const FVector4 VertexWorldSpace = World * v[i].Position;
-        const FVector4 NormalWorldSpace = World * v[i].Normal;
+        const FVertex& Vertex = Vertices[i];
+        const FVector4 VertexWorldSpace = World * Vertex.Position;
+        const FVector4 NormalWorldSpace = World * Vertex.Normal;
 
-#if ENABLE_LIGHTING
         const float kAmbient = 0.4f;
         const float kDiffuse = 0.6f;
 
         const FVector4 VertexToLight = -kLightDirection;
         const float Lighting = kAmbient + (kDiffuse * std::max(0.0f, NormalWorldSpace.Dot(VertexToLight)));
-#else 
-        const float Lighting = 1.0f;
-#endif
 
         const FVector4 VertexScreenSpace = ApplyProjectionTransform(ViewProjection, VertexWorldSpace);
         
         HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
         HelperSetFixedPointVector(*BackFaceCullInputPorts[i], VertexScreenSpace);
-
-        HelperSetFixedPointVector(*ColourInputPorts[i], v[i].Colour * Lighting);
+        HelperSetFixedPointVector(*ColourInputPorts[i], Vertex.Colour * Lighting);
     }
+
+    // step rasterizer to clock the triangle's vertex data
 
     Rasterizer.i_start = 1;
     StepRasterizer();
@@ -499,7 +425,8 @@ void App::RenderTriangle(int Index)
         HelperSetFixedPointVector(*ColourInputPorts[i], FVector4::Zero());
     }
 
-    // evaluate back face culling, so it's available on the next tick
+    // evaluate back face culling module, so its result is available on the next tick
+    
     BackFaceCull.eval();
 }
 
