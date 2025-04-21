@@ -10,16 +10,19 @@ module TriangleAssembly(
     input i_reset_n,
 
     input i_start,                          // raise for one clock cyle, to start rendering triangles described by i_vertex_buffer, i_index_buffer, and i_num_triangles
-    input [31:0] i_address_vertex_buffer,   // array of Vertex_t (local space) - memory should remain valid until o_idle is raised
-    input [31:0] i_address_index_buffer,    // array of uint16 - memory should remain valid until o_idle is raised
+    input [31:0] i_address_vertex_buffer,   // array of Vertex_t (local space) - memory should remain valid until o_ready is raised
+    input [31:0] i_address_index_buffer,    // array of uint16 - memory should remain valid until o_ready is raised
     input [31:0] i_num_triangles,           // number of triangles - should be valid when i_start is raised
     input Matrix44_t i_world,               // world transform  - should be valid when i_start is raised
     input Matrix44_t i_view_projection,     // concatenated view + projection matrices - should be valid when i_start is raised
+    input `FixedPoint_t i_screenWidth,      // width of screen that we are rendering to
+    input `FixedPoint_t i_screenHeight,     // height of screen that we are rendering to
 
-    input i_pause,                          // raise this input to pause the TriangleAssembly pipeline (i.e. if all Triangle Rasterizers are busy)
+    input i_rasterizer_ready,               // raise this input to pause the TriangleAssembly pipeline (i.e. if all Triangle Rasterizers are busy)
                                             // The pipeline will pause at the state of outputting a triangle
     
-    output reg o_idle,                      // raised while the TriangleAssembly pipeline is idle.
+    output reg o_ready,                     // raised while the TriangleAssembly pipeline is ready
+                                            // to start a new request
     
     output reg o_valid,                     // raised when a triangle is being output on o_v1, o_v2, o_v3, o_c1, o_c2, o_c3
     output Vector4_t o_v1, o_v2, o_v3,      // ScreenSpace Triangle Vertex locations
@@ -29,7 +32,11 @@ module TriangleAssembly(
     output reg o_memory_read,               // raised when assembly wants to read from memory at o_address
     input [31:0] i_memory_data,             // 32 bits of data ready from memory at o_address
 
-    output reg o_error                      // an error has occurred
+    output reg o_error,                     // an error has occurred
+
+    output reg [3:0] o_debug_state,
+    output reg [31:0] o_debug_state_counter,
+    output reg [31:0] o_debug_triangle_index
 );
 
 // data loaded from module API on i_start
@@ -41,7 +48,7 @@ Matrix44_t r_view_projection;
 
 // internal state data
 typedef enum logic [3:0] {
-    IDLE,                                   // waiting for i_start to be raised
+    READY,                                   // waiting for i_start to be raised
     LOAD_INDEX_BUFFER,                      // load 3 x indexes from index buffer
     LOAD_VERTEX_BUFFER,                     // load 3 x vertices (local space) from vertex buffer
     TRANSFORM_WORLD,                        // apply world transform to vertices (local space) to get vertices (world space)
@@ -92,6 +99,45 @@ function [31:0] memory_address_vertex_buffer_colour;
     end
 endfunction
 
+// View Projection hardware
+
+Vector4_t r_view_project_v1;
+Vector4_t r_view_project_v2;
+Vector4_t r_view_project_v3;
+
+VertexTransform view_project_v1(
+    .i_vertex(r_v1),
+    .i_matrix(r_view_projection),
+    .i_screenWidth(i_screenWidth),
+    .i_screenHeight(i_screenHeight),
+    .o_vertex(r_view_project_v1)
+);
+
+VertexTransform view_project_v2(
+    .i_vertex(r_v2),
+    .i_matrix(r_view_projection),
+    .i_screenWidth(i_screenWidth),
+    .i_screenHeight(i_screenHeight),
+    .o_vertex(r_view_project_v2)
+);
+
+VertexTransform view_project_v3(
+    .i_vertex(r_v3),
+    .i_matrix(r_view_projection),
+    .i_screenWidth(i_screenWidth),
+    .i_screenHeight(i_screenHeight),
+    .o_vertex(r_view_project_v3)
+);
+
+// Back face culling
+reg r_cull;
+
+TriangleBackFaceCull back_face_cull(
+    .i_v1(r_v1),
+    .i_v2(r_v2),
+    .i_v3(r_v3),
+    .o_result(r_cull)
+);
 
 always @(posedge i_clk or negedge i_reset_n)
 begin
@@ -101,7 +147,7 @@ begin
         // reset
         ////////////////////////////////////////////////////////////////
         
-        r_state <= IDLE;
+        r_state <= READY;
         r_state_counter <= 0;
 
         r_triangle_index <= 0;
@@ -137,7 +183,7 @@ begin
         o_memory_read <= 0;
 
         case (r_state)
-            IDLE: begin
+            READY: begin
             end
             LOAD_INDEX_BUFFER: begin
                 // load 3 x indices into local registers
@@ -282,20 +328,41 @@ begin
                 endcase
             end
             TRANSFORM_WORLD: begin
-                // TODO: transform 3 x vertices from local space to world space
+                // transform 3 x vertices from local space to world space
+
+                r_v1 <= matrix_multiply_vector(r_world, r_v1);
+                r_v2 <= matrix_multiply_vector(r_world, r_v2);
+                r_v3 <= matrix_multiply_vector(r_world, r_v3);
+
+                r_state <= LIGHT;
             end
             LIGHT: begin
                 // TODO: light 3 x vertices in world space
+
+                r_state <= TRANSFORM_VIEW_PROJECTION;
+
             end
             TRANSFORM_VIEW_PROJECTION: begin
-                // TODO: transform 3 x vertices from world space to screen space
+                // transform 3 x vertices from world space to screen space
+                r_v1 <= r_view_project_v1;
+                r_v2 <= r_view_project_v2;
+                r_v3 <= r_view_project_v3;
+
             end
             BACKFACE_CULL: begin
-                // TODO: decide whether to backface cull this triangle, or rasterize it
+                // decide whether to backface cull this triangle, or rasterize it
+                if (r_cull)
+                begin
+                    r_state <= FINISHED_TRIANGLE;
+                end
+                else
+                begin
+                    r_state <= READY_TO_RASTERIZE;
+                end
             end
             READY_TO_RASTERIZE: begin
                 // wait until a rasterizer is available
-                if (!i_pause)
+                if (i_rasterizer_ready)
                 begin
                     r_state <= START_RASTERIZE;
                 end
@@ -311,7 +378,7 @@ begin
                 if ((r_triangle_index + 1) >= r_num_triangles)
                 begin
                     // finished assembling all triangles
-                    r_state <= IDLE;
+                    r_state <= READY;
                 end else begin
                     // start assembling the next triangle
                     r_triangle_index <= r_triangle_index + 1;
@@ -331,6 +398,7 @@ end
 
 always @(*)
 begin
+    o_ready = 0;
     o_valid = 0;
     o_error = 0;
 
@@ -341,25 +409,23 @@ begin
     o_c2 = r_c2;
     o_c3 = r_c3;
 
+    o_debug_state = r_state;
+    o_debug_state_counter = r_state_counter;
+    o_debug_triangle_index = r_triangle_index;
+
     case (r_state)
+        READY: begin
+            o_ready = 1;
+        end
         START_RASTERIZE: begin
             o_valid = 1;
         end
-        ERROR: o_error = 1;
+        ERROR: begin
+            o_error = 1;
+        end
         default: begin
         end
     endcase
 end
-
-// for each triangle
-// - read data for vertices (3 * 4 * 32bit) and colours (3 * 4 * 32bit)
-// - apply world transform
-// TODO - apply lighting at this stage
-// - apply viewProjection transform
-// - 
-
-// i_pause - only use when pipeline is ready to output a triangle
-
-
 
 endmodule
