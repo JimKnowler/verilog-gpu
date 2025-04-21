@@ -24,9 +24,14 @@ add_executable(Main
     gpu/Matrix44.cpp
     gpu/VerilatorHelpers.cpp
 )
+
+verilate(Main SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
+
+# TODO: remove these modules, when TriangleAssembly is operational
 verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/TriangleBackFaceCull.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
+
 
 target_link_libraries(Main PRIVATE
     "-framework OpenGL"
