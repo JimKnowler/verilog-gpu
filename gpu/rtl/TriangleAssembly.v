@@ -10,8 +10,8 @@ module TriangleAssembly(
     input i_reset_n,
 
     input i_start,                          // raise for one clock cyle, to start rendering triangles described by i_vertex_buffer, i_index_buffer, and i_num_triangles
-    input [31:0] i_address_vertex_buffer,   // array of Vertex_t (local space) - memory should remain valid until o_ready is raised
     input [31:0] i_address_index_buffer,    // array of uint16 - memory should remain valid until o_ready is raised
+    input [31:0] i_address_vertex_buffer,   // array of Vertex_t (local space) - memory should remain valid until o_ready is raised
     input [31:0] i_num_triangles,           // number of triangles - should be valid when i_start is raised
     input Matrix44_t i_world,               // world transform  - should be valid when i_start is raised
     input Matrix44_t i_view_projection,     // concatenated view + projection matrices - should be valid when i_start is raised
@@ -45,12 +45,17 @@ reg [31:0] r_address_index_buffer;
 reg [31:0] r_num_triangles;
 Matrix44_t r_world;
 Matrix44_t r_view_projection;
+reg `FixedPoint_t r_screenWidth;
+reg `FixedPoint_t r_screenHeight;
 
 // internal state data
 typedef enum logic [3:0] {
     READY,                                   // waiting for i_start to be raised
     LOAD_INDEX_BUFFER,                      // load 3 x indexes from index buffer
     LOAD_VERTEX_BUFFER,                     // load 3 x vertices (local space) from vertex buffer
+                                            //  - Position
+                                            //  - Normal (TODO)
+                                            //  - Colour
     TRANSFORM_WORLD,                        // apply world transform to vertices (local space) to get vertices (world space)
     LIGHT,                                  // modify vertex colours (world space)
     TRANSFORM_VIEW_PROJECTION,              // apply view&projection to vertices (world space) to get vertices (screen space)
@@ -75,7 +80,7 @@ function [31:0] memory_address_index_buffer;
     input [31:0] vertex_index;
 
     begin
-        memory_address_index_buffer = ((3 * triangle_index) + vertex_index) * 4;
+        memory_address_index_buffer = r_address_index_buffer + (((3 * triangle_index) + vertex_index) * 4);
     end
 endfunction
 
@@ -85,7 +90,7 @@ function [31:0] memory_address_vertex_buffer_position;
     input [31:0] component_index;
 
     begin
-        memory_address_vertex_buffer_position = ((12 * vertex_index) + component_index) * 4;
+        memory_address_vertex_buffer_position = r_address_vertex_buffer + (((12 * vertex_index) + component_index) * 4);
     end
 endfunction
 
@@ -95,7 +100,7 @@ function [31:0] memory_address_vertex_buffer_colour;
     input [31:0] component_index;
 
     begin
-        memory_address_vertex_buffer_colour = ((12 * vertex_index) + 8 + component_index) * 4;
+        memory_address_vertex_buffer_colour = r_address_vertex_buffer + (((12 * vertex_index) + 8 + component_index) * 4);
     end
 endfunction
 
@@ -108,24 +113,24 @@ Vector4_t r_view_project_v3;
 VertexTransform view_project_v1(
     .i_vertex(r_v1),
     .i_matrix(r_view_projection),
-    .i_screenWidth(i_screenWidth),
-    .i_screenHeight(i_screenHeight),
+    .i_screenWidth(r_screenWidth),
+    .i_screenHeight(r_screenHeight),
     .o_vertex(r_view_project_v1)
 );
 
 VertexTransform view_project_v2(
     .i_vertex(r_v2),
     .i_matrix(r_view_projection),
-    .i_screenWidth(i_screenWidth),
-    .i_screenHeight(i_screenHeight),
+    .i_screenWidth(r_screenWidth),
+    .i_screenHeight(r_screenHeight),
     .o_vertex(r_view_project_v2)
 );
 
 VertexTransform view_project_v3(
     .i_vertex(r_v3),
     .i_matrix(r_view_projection),
-    .i_screenWidth(i_screenWidth),
-    .i_screenHeight(i_screenHeight),
+    .i_screenWidth(r_screenWidth),
+    .i_screenHeight(r_screenHeight),
     .o_vertex(r_view_project_v3)
 );
 
@@ -167,6 +172,8 @@ begin
         r_num_triangles <= i_num_triangles;
         r_world <= i_world;
         r_view_projection <= i_view_projection;
+        r_screenWidth <= i_screenWidth;
+        r_screenHeight <= i_screenHeight;
 
         // initialise state
         r_state <= LOAD_INDEX_BUFFER;
@@ -187,6 +194,8 @@ begin
             end
             LOAD_INDEX_BUFFER: begin
                 // load 3 x indices into local registers
+
+                r_state_counter <= r_state_counter + 1;
 
                 case (r_state_counter)
                 0: begin
@@ -221,6 +230,7 @@ begin
                 // - macro to abbreviate each case to a single, easy to ready line?
 
                 o_memory_read <= 1;
+                r_state_counter <= r_state_counter + 1;
 
                 case (r_state_counter)
                 0: begin
@@ -347,6 +357,8 @@ begin
                 r_v1 <= r_view_project_v1;
                 r_v2 <= r_view_project_v2;
                 r_v3 <= r_view_project_v3;
+
+                r_state <= BACKFACE_CULL;
 
             end
             BACKFACE_CULL: begin

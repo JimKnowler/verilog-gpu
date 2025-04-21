@@ -26,9 +26,9 @@ add_executable(Main
 )
 
 verilate(Main SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
+verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 
 # TODO: remove these modules, when TriangleAssembly is operational
-verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/TriangleBackFaceCull.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
 
@@ -71,6 +71,7 @@ add_executable(TestRtl
     test/Matrix44.test.cpp
     test/TriangleRasterizerTiming.test.cpp
     test/TriangleBackFaceCull.test.cpp
+    test/TriangleAssembly.test.cpp
     test/VectorDotProduct.test.cpp
     test/VectorAddVector.test.cpp
     test/VectorSubVector.test.cpp
@@ -101,6 +102,7 @@ verilate(TestRtl SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/VectorSelect.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/TriangleRasterizerTiming.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/TriangleBackFaceCull.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 
