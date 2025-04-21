@@ -110,39 +110,44 @@ TEST_F(TriangleAssembly, ShouldRenderSingleTriangle)
 
     for (int i=0; i<kMaxNumTicks; i++)
     {
+#if 0
         printf("Tick [%d] State [%d] StateCounter [%d] TriangleIndex [%d]\n", 
             i, 
             Module.o_debug_state, 
             Module.o_debug_state_counter, 
             Module.o_debug_triangle_index
         );
+#endif
 
-        #if 1
+#if 1
         printf("  - v1[%s] v2[%s] v3[%s]\n",
             HelperGetFixedPointVector(Module.o_v1).ToString().c_str(),
             HelperGetFixedPointVector(Module.o_v2).ToString().c_str(),
             HelperGetFixedPointVector(Module.o_v3).ToString().c_str()
         );
-        #endif
+#endif
         
-        if (Module.o_valid) {
+        if (Module.o_valid) 
+        {
             break;
         }
         
         if (Module.o_memory_read)
         {
             Module.i_memory_data = Memory[Module.o_memory_address / 4];
-        } else {
+        }
+        else
+        {
             Module.i_memory_data = 12345678;
         }
 
-        #if 0
+#if 0
         printf("  - o_memory_read[%u] o_memory_address[%u] i_memory_data[%u]\n",
             Module.o_memory_read,
             Module.o_memory_address,
             Module.i_memory_data
         );
-        #endif
+#endif
 
         TestBench.Tick();
     }
@@ -162,4 +167,5 @@ TEST_F(TriangleAssembly, ShouldRenderSingleTriangle)
     // state = READY
     ASSERT_EQ(0, Module.o_valid);
     ASSERT_EQ(1, Module.o_ready);
+    ASSERT_EQ(1, Module.o_debug_triangle_index);
 }

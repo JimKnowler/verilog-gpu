@@ -387,13 +387,14 @@ begin
                 r_state <= FINISHED_TRIANGLE;                
             end
             FINISHED_TRIANGLE: begin
+                r_triangle_index <= r_triangle_index + 1;
+
                 if ((r_triangle_index + 1) >= r_num_triangles)
                 begin
                     // finished assembling all triangles
                     r_state <= READY;
                 end else begin
-                    // start assembling the next triangle
-                    r_triangle_index <= r_triangle_index + 1;
+                    // start assembling the next triangle    
                     r_state <= LOAD_INDEX_BUFFER;
                 end
             end
