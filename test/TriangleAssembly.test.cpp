@@ -84,7 +84,7 @@ public:
         Module.i_start = 0;
     }
 
-    void HelperTickModuleUntilValidOrReady(int MaxNumTicks)
+    bool HelperTickModuleUntilValidOrReady(int MaxNumTicks)
     {
         auto& Module = TestBench.Module;
 
@@ -109,7 +109,7 @@ public:
             
             if (Module.o_valid || Module.o_ready) 
             {
-                break;
+                return true;
             }
             
             if (Module.o_memory_read)
@@ -131,6 +131,8 @@ public:
 
             TestBench.Tick();
         }
+
+        return false;
     }
 };
 
@@ -183,7 +185,7 @@ TEST_F(TriangleAssembly, ShouldRenderSingleTriangle)
     HelperStartModule(0, kIndexBufferSize);
     
     const int kMaxNumTicks = 100;
-    HelperTickModuleUntilValidOrReady(kMaxNumTicks);
+    EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
 
     // state = START_RASTERIZER
     ASSERT_EQ(1, Module.o_valid);
@@ -236,7 +238,7 @@ TEST_F(TriangleAssembly, ShouldNotRasterizeSingleTriangleFacingBackwards)
     HelperStartModule(0, kIndexBufferSize);
     
     const int kMaxNumTicks = 100;
-    HelperTickModuleUntilValidOrReady(kMaxNumTicks);
+    EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
 
     // state = READY
     ASSERT_EQ(0, Module.o_valid);
@@ -244,6 +246,68 @@ TEST_F(TriangleAssembly, ShouldNotRasterizeSingleTriangleFacingBackwards)
     ASSERT_EQ(1, Module.o_debug_triangle_index);
 }
 
-// TODO: render multiple triangles
+TEST_F(TriangleAssembly, ShouldWaitUntilRasterizerIsReadyToRenderSingleTriangle)
+{
+    HelperResetTestBench();
 
-// TODO: prevent output to rasterizer, when rasterizer is not ready
+    auto& Module = TestBench.Module;
+
+    // prepare a triangle for render
+    std::vector<uint32_t> IndexBuffer = {0, 1, 2};
+    std::vector<FFixedPointVertex> VertexBuffer = {
+        {
+            .Position = FFixedPointVector4(10.0f, 0.0f, 0.0f, 1.0f),
+            .Normal = FFixedPointVector4(0.0f, 0.0f, 1.0f, 0.0f),
+            .Colour = FFixedPointVector4(1.0f, 0.0f, 0.0f, 1.0f)
+        },
+        {
+            .Position = FFixedPointVector4{100.0f, 0.0f, 0.0f, 1.0f},
+            .Normal = FFixedPointVector4{0.0f, 0.0f, 1.0f, 0.0f},
+            .Colour = FFixedPointVector4{0.0f, 1.0f, 0.0f, 1.0f}
+        },
+        {
+            .Position = FFixedPointVector4{50.0f, 50.0f, 0.0f, 1.0f},
+            .Normal = FFixedPointVector4{0.0f, 0.0f, 1.0f, 0.0f},
+            .Colour = FFixedPointVector4{0.0f, 0.0f, 1.0f, 1.0f}
+        }
+    };
+
+    HelperPrepareMemory(IndexBuffer, VertexBuffer);
+
+    const uint32_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
+    HelperStartModule(0, kIndexBufferSize);
+
+    // block triangle assembly
+    Module.i_rasterizer_ready = 0;
+    
+    const int kMaxNumTicks = 100;
+    EXPECT_FALSE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
+
+    // state = READY_TO_RASTERIZE
+    ASSERT_EQ(0, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    Module.i_rasterizer_ready = 1;
+    TestBench.Tick();
+
+    // state = START_RASTERIZE
+    ASSERT_EQ(1, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    TestBench.Tick();
+
+    // state = TRIANGLE_COMPLETE
+    ASSERT_EQ(0, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    TestBench.Tick();
+
+    // state = READY
+    ASSERT_EQ(0, Module.o_valid);
+    ASSERT_EQ(1, Module.o_ready);
+    ASSERT_EQ(1, Module.o_debug_triangle_index);
+}
+
+
+
+// TODO: render multiple triangles
