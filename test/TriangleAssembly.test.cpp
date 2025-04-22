@@ -47,13 +47,13 @@ public:
         memcpy(reinterpret_cast<uint8_t*>(&Memory.front()) + kIndexBufferSize, &VertexBuffer.front(), kVertexBufferSize);
     }
 
-    void HelperStartModule(int AddressIndexBuffer, int AddressVertexBuffer)
+    void HelperStartModule(int AddressIndexBuffer, int AddressVertexBuffer, int NumTriangles)
     {
         auto& Module = TestBench.Module;
 
         Module.i_address_index_buffer = AddressIndexBuffer;
         Module.i_address_vertex_buffer = AddressVertexBuffer;    
-        Module.i_num_triangles = 1;
+        Module.i_num_triangles = NumTriangles;
         
         HelperSetFixedPointMatrix(Module.i_world, FMatrix44::Identity());
         
@@ -182,7 +182,7 @@ TEST_F(TriangleAssembly, ShouldRenderSingleTriangle)
     HelperPrepareMemory(IndexBuffer, VertexBuffer);
 
     const uint32_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
-    HelperStartModule(0, kIndexBufferSize);
+    HelperStartModule(0, kIndexBufferSize, 1);
     
     const int kMaxNumTicks = 100;
     EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
@@ -235,7 +235,7 @@ TEST_F(TriangleAssembly, ShouldNotRasterizeSingleTriangleFacingBackwards)
     HelperPrepareMemory(IndexBuffer, VertexBuffer);
 
     const size_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
-    HelperStartModule(0, kIndexBufferSize);
+    HelperStartModule(0, kIndexBufferSize, 1);
     
     const int kMaxNumTicks = 100;
     EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
@@ -275,7 +275,7 @@ TEST_F(TriangleAssembly, ShouldWaitUntilRasterizerIsReadyToRenderSingleTriangle)
     HelperPrepareMemory(IndexBuffer, VertexBuffer);
 
     const uint32_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
-    HelperStartModule(0, kIndexBufferSize);
+    HelperStartModule(0, kIndexBufferSize, 1);
 
     // block triangle assembly
     Module.i_rasterizer_ready = 0;
@@ -308,6 +308,71 @@ TEST_F(TriangleAssembly, ShouldWaitUntilRasterizerIsReadyToRenderSingleTriangle)
     ASSERT_EQ(1, Module.o_debug_triangle_index);
 }
 
+TEST_F(TriangleAssembly, ShouldRenderMultipleTriangles)
+{
+    HelperResetTestBench();
 
+    auto& Module = TestBench.Module;
 
-// TODO: render multiple triangles
+    // prepare a triangle for render
+    std::vector<uint32_t> IndexBuffer = {0, 1, 2,
+                                         2, 1, 3};
+    std::vector<FFixedPointVertex> VertexBuffer = {
+        {
+            .Position = FFixedPointVector4(10.0f, 0.0f, 0.0f, 1.0f),
+            .Normal = FFixedPointVector4(0.0f, 0.0f, 1.0f, 0.0f),
+            .Colour = FFixedPointVector4(1.0f, 0.0f, 0.0f, 1.0f)
+        },
+        {
+            .Position = FFixedPointVector4{100.0f, 0.0f, 0.0f, 1.0f},
+            .Normal = FFixedPointVector4{0.0f, 0.0f, 1.0f, 0.0f},
+            .Colour = FFixedPointVector4{0.0f, 1.0f, 0.0f, 1.0f}
+        },
+        {
+            .Position = FFixedPointVector4{50.0f, 50.0f, 0.0f, 1.0f},
+            .Normal = FFixedPointVector4{0.0f, 0.0f, 1.0f, 0.0f},
+            .Colour = FFixedPointVector4{0.0f, 0.0f, 1.0f, 1.0f}
+        },
+        {
+            .Position = FFixedPointVector4{100.0f, 100.0f, 0.0f, 1.0f},
+            .Normal = FFixedPointVector4{0.0f, 0.0f, 1.0f, 0.0f},
+            .Colour = FFixedPointVector4{1.0f, 1.0f, 0.0f, 1.0f}
+        }
+    };
+
+    HelperPrepareMemory(IndexBuffer, VertexBuffer);
+
+    const uint32_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
+    HelperStartModule(0, kIndexBufferSize, 2);
+    
+    const int kMaxNumTicks = 100;
+    
+    // Triangle 1
+    EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
+
+    // state = START_RASTERIZER
+    ASSERT_EQ(1, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    TestBench.Tick();
+
+    // Triangle 2
+    EXPECT_TRUE(HelperTickModuleUntilValidOrReady(kMaxNumTicks));
+
+    // state = START_RASTERIZER
+    ASSERT_EQ(1, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    TestBench.Tick();
+
+    // state = FINISHED_TRIANGLE
+    ASSERT_EQ(0, Module.o_valid);
+    ASSERT_EQ(0, Module.o_ready);
+
+    TestBench.Tick();
+
+    // state = READY
+    ASSERT_EQ(0, Module.o_valid);
+    ASSERT_EQ(1, Module.o_ready);
+    ASSERT_EQ(2, Module.o_debug_triangle_index);
+}
