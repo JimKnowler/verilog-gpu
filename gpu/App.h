@@ -9,13 +9,12 @@
 #include <verilated.h>
 
 // Verilog Modules
+#include "VTriangleAssembly.h"
 #include "VTriangleRasterizer.h"
-#include "VTriangleBackFaceCull.h"
-#include "VVertexTransform.h"
 
 // Math
 #include "Matrix44.h"
-#include "Vertex.h"
+#include "FixedPointVertex.h"
 
 class App : public olc::PixelGameEngine
 {
@@ -43,24 +42,21 @@ private:
     void InitAnimation();
     void TickAnimation();
     
-    int GetRenderBufferIndexForPixel(int x, int y) const;
+    int GetRenderBufferPixelIndex(int x, int y) const;
     std::vector<olc::Pixel>& GetBackBuffer();
     std::vector<olc::Pixel>& GetFrontBuffer();
     void SwapRenderBuffers();
-
     void ClearBackBuffer();
-
-    void StartRenderingModel();
-    bool StartRenderingNextTriangle();
-    void RenderTriangle(int Index);
 
     void InitRasterizer();
     void StepRasterizer();
 
+    void InitTriangleAssembly();
+    void StartTriangleAssembly();
+    void StepTriangleAssembly();
+
     FMatrix44 MakeWorldTransform() const;
     FMatrix44 MakeViewProjectionTransform() const;
-
-    FVector4 ApplyProjectionTransform(const FMatrix44& Transform, const FVector4 Vertex);
 
     void InitModel();
 
@@ -79,12 +75,9 @@ private:
     // Verilog Render pipeline
     
     VTriangleRasterizer Rasterizer;
-    VVertexTransform VertexTransform;
-    VTriangleBackFaceCull BackFaceCull;
+    VTriangleAssembly TriangleAssembly;
 
-    std::vector<VlWide<4UL>*> VertexInputPorts;
-    std::vector<VlWide<4UL>*> BackFaceCullInputPorts;
-    std::vector<VlWide<4UL>*> ColourInputPorts;
+    std::vector<uint32_t> Memory;
 
     ///////////////////////////////////
     // Animation
@@ -96,11 +89,6 @@ private:
 
     int NumTriangles = 0;
     
-    std::vector<FVertex> VertexBuffer;
+    std::vector<FFixedPointVertex> VertexBuffer;
     std::vector<uint32_t> IndexBuffer;
-
-    ///////////////////////////////////
-    // Model Rendering
-
-    int TriangleIndex = 0;
 };

@@ -47,24 +47,6 @@ int main(int argc, char* argv[])
 App::App() 
 {
     sAppName = "verilog-gpu";
-
-    VertexInputPorts = {
-        &Rasterizer.i_v1,
-        &Rasterizer.i_v2,
-        &Rasterizer.i_v3
-    };
-
-    BackFaceCullInputPorts = {
-        &BackFaceCull.i_v1,
-        &BackFaceCull.i_v2,
-        &BackFaceCull.i_v3
-    };
-
-    ColourInputPorts = {
-        &Rasterizer.i_c1,
-        &Rasterizer.i_c2,
-        &Rasterizer.i_c3
-    };
 }
 
 bool App::OnUserCreate() 
@@ -79,8 +61,9 @@ bool App::OnUserCreate()
     InitModel();
     InitAnimation();
     InitRasterizer();
+    InitTriangleAssembly();
 
-    StartRenderingModel();
+    StartTriangleAssembly();
 
     return true;
 }
@@ -110,17 +93,15 @@ void App::Update(float DeltaTime)
     // rasterize some pixels
     for (int n = 0; n < kRasterizerBatchSize; n++) 
     {
-        if (Rasterizer.o_ready || BackFaceCull.o_result)
+        if (Rasterizer.o_ready && TriangleAssembly.o_ready)
         {
-            if (!StartRenderingNextTriangle())
-            {
-                // frame complete
-                SwapRenderBuffers();
-                ClearBackBuffer();
-                TickAnimation();
-                StartRenderingModel();
-            }
-
+            // frame complete
+            
+            SwapRenderBuffers();
+            ClearBackBuffer();
+            TickAnimation();
+            StartTriangleAssembly();
+        
             continue;
         }        
 
@@ -130,15 +111,20 @@ void App::Update(float DeltaTime)
         } 
 
         StepRasterizer();
+        StepTriangleAssembly();
     }
 }
 
 void App::RenderPixelFromRasterizerToBackBuffer()
 {
-    int x = Rasterizer.o_x;
-    int y = Rasterizer.o_y;
+    const int x = Rasterizer.o_x;
+    const int y = Rasterizer.o_y;
 
-    const int Index = GetRenderBufferIndexForPixel(x, y);
+#if 0
+    printf("Render Pixel at [%d] , [%d]\n", x, y);
+#endif
+
+    const int Index = GetRenderBufferPixelIndex(x, y);
     olc::Pixel& Pixel = GetBackBuffer()[Index];
     
     const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
@@ -154,7 +140,7 @@ void App::RenderPixelFromRasterizerToBackBuffer()
     Pixel = olc::Pixel(r, g, b);
 }
 
-int App::GetRenderBufferIndexForPixel(int x, int y) const
+int App::GetRenderBufferPixelIndex(int x, int y) const
 {
     return (y * kRasterSize.x) + x;
 }
@@ -237,24 +223,6 @@ FMatrix44 App::MakeViewProjectionTransform() const
     return Transform;
 }
 
-FVector4 App::ApplyProjectionTransform(const FMatrix44 &Transform, const FVector4 Vertex)
-{
-    HelperSetFixedPointMatrix(VertexTransform.i_matrix, Transform);
-    HelperSetFixedPointVector(VertexTransform.i_vertex, Vertex);
-    VertexTransform.i_screenWidth = ToFixedPoint(kRasterSize.x);
-    VertexTransform.i_screenHeight = ToFixedPoint(kRasterSize.y);
-
-    VertexTransform.eval();
-    
-    const FVector4 VertexScreenSpace = HelperGetFixedPointVector(VertexTransform.o_vertex);
-
-    assert(VertexScreenSpace.Z <= 1.0f);
-    assert(VertexScreenSpace.Z >= -1.0f);
-    assert(VertexScreenSpace.IsPoint());
-
-    return VertexScreenSpace;
-}
-
 namespace 
 {
     const std::vector<FVector4> kCubeVertices = {
@@ -333,11 +301,13 @@ void App::InitModel()
         const FVector4 Normal = kCubeFaceNormals[Face];
         assert(Normal.IsDirection());        
         
-        VertexBuffer.push_back({
-            .Position = Position,
-            .Normal = Normal,
-            .Colour = Colour
-        });
+        const FFixedPointVertex Vertex{
+            .Position = FFixedPointVector4(Position),
+            .Normal = FFixedPointVector4(Normal),
+            .Colour = FFixedPointVector4(Colour)
+        };
+
+        VertexBuffer.push_back(Vertex);
     }
 
     NumTriangles = 12;
@@ -369,80 +339,6 @@ void App::InitModel()
     };
 }
 
-void App::StartRenderingModel()
-{
-    TriangleIndex = 0;
-
-    RenderTriangle(TriangleIndex);
-}
-
-void App::RenderTriangle(int TriangleIndex)
-{
-    const int ArrayBufferIndex = TriangleIndex * 3;
-
-    std::vector<FVertex> Vertices(3);
-
-    for (int i=0; i<3; i++)
-    {
-        const int VertexBufferIndex = IndexBuffer[ArrayBufferIndex + i];
-        const FVertex& Vertex = VertexBuffer[VertexBufferIndex];
-        Vertices[i] = Vertex;
-    }
-
-    const FMatrix44 World = MakeWorldTransform();
-    const FMatrix44 ViewProjection = MakeViewProjectionTransform();
-
-    for (int i=0; i<3; i++) 
-    {
-        const FVertex& Vertex = Vertices[i];
-        const FVector4 VertexWorldSpace = World * Vertex.Position;
-        const FVector4 NormalWorldSpace = World * Vertex.Normal;
-
-        const float kAmbient = 0.4f;
-        const float kDiffuse = 0.6f;
-
-        const FVector4 VertexToLight = -kLightDirection;
-        const float Lighting = kAmbient + (kDiffuse * std::max(0.0f, NormalWorldSpace.Dot(VertexToLight)));
-
-        const FVector4 VertexScreenSpace = ApplyProjectionTransform(ViewProjection, VertexWorldSpace);
-        
-        HelperSetFixedPointVector(*VertexInputPorts[i], VertexScreenSpace);
-        HelperSetFixedPointVector(*BackFaceCullInputPorts[i], VertexScreenSpace);
-        HelperSetFixedPointVector(*ColourInputPorts[i], Vertex.Colour * Lighting);
-    }
-
-    // step rasterizer to clock the triangle's vertex data
-
-    Rasterizer.i_start = 1;
-    StepRasterizer();
-    Rasterizer.i_start = 0;
-
-    // verify that rasterizer is caching vertex locations + colours
-
-    for (int i=0; i<3; i++) 
-    {
-        HelperSetFixedPointVector(*VertexInputPorts[i], FVector4::Zero());
-        HelperSetFixedPointVector(*ColourInputPorts[i], FVector4::Zero());
-    }
-
-    // evaluate back face culling module, so its result is available on the next tick
-    
-    BackFaceCull.eval();
-}
-
-bool App::StartRenderingNextTriangle()
-{
-    TriangleIndex += 1;
-    if (TriangleIndex >= NumTriangles)
-    {
-        return false;
-    }
-
-    RenderTriangle(TriangleIndex);
-    
-    return true;
-}
-
 void App::InitRasterizer()
 {
     Rasterizer.i_reset_n = 0;
@@ -456,11 +352,113 @@ void App::InitRasterizer()
 
 void App::StepRasterizer()
 {
+    Rasterizer.i_start = TriangleAssembly.o_valid;
+    Rasterizer.i_v1 = TriangleAssembly.o_v1;
+    Rasterizer.i_v2 = TriangleAssembly.o_v2;
+    Rasterizer.i_v3 = TriangleAssembly.o_v3;
+    Rasterizer.i_c1 = TriangleAssembly.o_c1;
+    Rasterizer.i_c2 = TriangleAssembly.o_c2;
+    Rasterizer.i_c3 = TriangleAssembly.o_c3;
+
+    if (Rasterizer.i_start)
+    {
+        assert(Rasterizer.o_ready);
+    }
+    
     Rasterizer.i_clk = 1;
     Rasterizer.eval();
 
     Rasterizer.i_clk = 0;
     Rasterizer.eval();
+
+    if (Rasterizer.i_start)
+    {
+        assert(!Rasterizer.o_ready);
+    }
+}
+
+void App::InitTriangleAssembly()
+{
+    // Reset module
+
+    TriangleAssembly.i_reset_n = 0;
+    TriangleAssembly.i_start = 0;
+    TriangleAssembly.i_clk = 0;
+    TriangleAssembly.eval();
+    
+    TriangleAssembly.i_reset_n = 1;
+    TriangleAssembly.eval();
+
+    // Prepare memory for Triangle Assembly
+    // TODO: convert this into a class?
+
+    const size_t kIndexBufferSize = IndexBuffer.size() * sizeof(uint32_t);
+    const size_t kVertexBufferSize = VertexBuffer.size() * sizeof(FFixedPointVertex);
+
+    const size_t kMemorySize = (kIndexBufferSize + kVertexBufferSize) / sizeof(uint32_t);
+    Memory = std::vector<uint32_t>(kMemorySize, 0);
+
+    memcpy(&Memory.front(), &IndexBuffer.front(), kIndexBufferSize);
+    memcpy(reinterpret_cast<uint8_t*>(&Memory.front()) + kIndexBufferSize, &VertexBuffer.front(), kVertexBufferSize);
+}
+
+void App::StartTriangleAssembly()
+{
+    // start rendering the model stored in the index + vertex buffers
+
+    const int AddressIndexBuffer = 0;
+    const int AddressVertexBuffer = IndexBuffer.size() * sizeof(uint32_t);
+
+    TriangleAssembly.i_address_index_buffer = AddressIndexBuffer;
+    TriangleAssembly.i_address_vertex_buffer = AddressVertexBuffer;    
+    TriangleAssembly.i_num_triangles = NumTriangles;
+    
+    HelperSetFixedPointMatrix(TriangleAssembly.i_world, MakeWorldTransform());
+    HelperSetFixedPointMatrix(TriangleAssembly.i_view_projection, MakeViewProjectionTransform());
+    
+    TriangleAssembly.i_screenWidth = ToFixedPoint(kRasterSize.x);
+    TriangleAssembly.i_screenHeight = ToFixedPoint(kRasterSize.y);
+    TriangleAssembly.i_start = 1;
+    TriangleAssembly.i_memory_data = 0;
+
+    StepTriangleAssembly();
+
+    // Reset inputs that only need to be valid while 'i_start' is raised
+    TriangleAssembly.i_address_vertex_buffer = 0;
+    TriangleAssembly.i_address_index_buffer = 0;
+    TriangleAssembly.i_num_triangles = 0;
+    HelperSetFixedPointMatrix(TriangleAssembly.i_world, FMatrix44::Zero());
+    HelperSetFixedPointMatrix(TriangleAssembly.i_view_projection, FMatrix44::Zero());
+    TriangleAssembly.i_screenWidth = 0;
+    TriangleAssembly.i_screenHeight = 0;
+    TriangleAssembly.i_start = 0;
+
+    StepTriangleAssembly();
+
+    assert(TriangleAssembly.o_ready == 0);
+    assert(TriangleAssembly.o_debug_triangle_index == 0);
+    assert(TriangleAssembly.o_debug_num_triangles == NumTriangles);
+}
+
+void App::StepTriangleAssembly()
+{
+    TriangleAssembly.i_rasterizer_ready = Rasterizer.o_ready;
+
+    if (TriangleAssembly.o_memory_read)
+    {
+        const size_t MemoryAddress = TriangleAssembly.o_memory_address;
+        TriangleAssembly.i_memory_data = Memory[MemoryAddress / 4];        
+    }
+    else
+    {
+        TriangleAssembly.i_memory_data = 0;
+    }
+
+    TriangleAssembly.i_clk = 1;
+    TriangleAssembly.eval();
+
+    TriangleAssembly.i_clk = 0;
+    TriangleAssembly.eval();
 }
 
 void App::Render()
@@ -477,7 +475,7 @@ void App::DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel
     {
         for (int y=0; y<kRasterSize.y; y++)
         {
-            const int Index = GetRenderBufferIndexForPixel(x, y);
+            const int Index = GetRenderBufferPixelIndex(x, y);
             const olc::Pixel Pixel = RenderBuffer[Index];
 
             DrawRect(Origin + olc::vi2d{x,y}, {1,1}, Pixel);

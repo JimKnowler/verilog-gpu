@@ -23,6 +23,7 @@ add_executable(Main
     gpu/Vector4.cpp
     gpu/Matrix44.cpp
     gpu/VerilatorHelpers.cpp
+    gpu/FixedPointVector4.cpp
 )
 
 verilate(Main SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
@@ -83,6 +84,7 @@ add_executable(TestRtl
     test/VertexTransform.test.cpp
     gpu/Matrix44.cpp
     gpu/Vector4.cpp
+    gpu/FixedPointVector4.cpp
     gpu/VerilatorHelpers.cpp
 )
 
