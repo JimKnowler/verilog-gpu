@@ -15,8 +15,8 @@ module TriangleRasterizerTiming (
     // FixedPoint: x,y screen location of rasterized pixel
     output signed [31:0] o_x, o_y,
 
-    // signals when the module has finished iterating over all pixels
-    output reg o_idle,
+    // signals when the module is ready to start rasterizing a new triangle
+    output reg o_ready,
 
     // signals when o_x, o_y are valid
     output reg o_valid
@@ -30,7 +30,7 @@ reg `FixedPoint_t r_x;
 reg `FixedPoint_t r_y;
 
 typedef enum logic {
-    IDLE,
+    READY,
     RASTERIZE
 } state_t;
 
@@ -40,7 +40,7 @@ always @(posedge i_clk or negedge i_reset_n)
 begin
     if (!i_reset_n)
     begin
-        state <= IDLE;
+        state <= READY;
         r_x <= 0;
         r_y <= 0;
     end
@@ -72,7 +72,7 @@ begin
                 end else begin
                     r_x <= 0;
                     r_y <= 0;
-                    state <= IDLE;
+                    state <= READY;
                 end
 
             end
@@ -82,18 +82,18 @@ end
 
 always @(*)
 begin
-    o_idle = 1;
+    o_ready = 1;
     o_valid = 0;
 
     case (state)
-    IDLE: begin
-        o_idle = 1;
+    READY: begin
+        o_ready = 1;
         o_valid = 0;
         o_x = 0;
         o_y = 0;
     end
     RASTERIZE: begin
-        o_idle = 0;
+        o_ready = 0;
         o_valid = 1;
         o_x = fixed_point_to_int32(r_x);
         o_y = fixed_point_to_int32(r_y);

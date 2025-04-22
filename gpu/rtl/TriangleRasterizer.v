@@ -5,6 +5,7 @@ module TriangleRasterizer (
     input i_clk,
     input i_reset_n,
     
+    // raise (for one cycle) to start rasterizing a new triangle
     input i_start,    
     input Vector4_t i_v1, i_v2, i_v3,
     input Vector4_t i_c1, i_c2, i_c3,
@@ -14,7 +15,8 @@ module TriangleRasterizer (
     output reg signed [31:0] o_x,
     output reg signed [31:0] o_y,
 
-    output reg o_idle
+    // signal (continously) that the rasterizer is ready to start rasterizing a new triangle
+    output reg o_ready
 );
 
 wire w_valid;
@@ -53,7 +55,7 @@ TriangleRasterizerTiming timing(
     .i_start(i_start),
     .o_x(w_x),
     .o_y(w_y),
-    .o_idle(o_idle),
+    .o_ready(o_ready),
     .o_valid(w_valid)
 );
 

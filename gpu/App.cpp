@@ -110,7 +110,7 @@ void App::Update(float DeltaTime)
     // rasterize some pixels
     for (int n = 0; n < kRasterizerBatchSize; n++) 
     {
-        if (Rasterizer.o_idle || BackFaceCull.o_result)
+        if (Rasterizer.o_ready || BackFaceCull.o_result)
         {
             if (!StartRenderingNextTriangle())
             {

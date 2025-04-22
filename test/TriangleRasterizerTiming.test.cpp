@@ -38,7 +38,7 @@ TEST_F(TriangleRasterizerTiming, ShouldResetToIdle)
 
     for (int i=0; i<10; i++)
     {
-        EXPECT_EQ(1, Module.o_idle);
+        EXPECT_EQ(1, Module.o_ready);
         EXPECT_EQ(0, Module.o_valid);
         EXPECT_EQ(0, Module.o_x);
         EXPECT_EQ(0, Module.o_y);
@@ -69,7 +69,7 @@ TEST_F(TriangleRasterizerTiming, ShouldIterateOverTriangleAABB)
             snprintf(Buffer, sizeof(Buffer), "x=%d y=%d", x, y);
             SCOPED_TRACE(Buffer);
 
-            ASSERT_EQ(0, Module.o_idle);
+            ASSERT_EQ(0, Module.o_ready);
             ASSERT_EQ(1, Module.o_valid);
 
             ASSERT_EQ(x, Module.o_x);
@@ -79,7 +79,7 @@ TEST_F(TriangleRasterizerTiming, ShouldIterateOverTriangleAABB)
         }
     }
 
-    ASSERT_EQ(1, Module.o_idle);
+    ASSERT_EQ(1, Module.o_ready);
     ASSERT_EQ(0, Module.o_valid);
     ASSERT_EQ(0, Module.o_x);
     ASSERT_EQ(0, Module.o_y);
