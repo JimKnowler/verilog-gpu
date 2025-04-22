@@ -36,7 +36,8 @@ module TriangleAssembly(
 
     output reg [3:0] o_debug_state,
     output reg [31:0] o_debug_state_counter,
-    output reg [31:0] o_debug_triangle_index
+    output reg [31:0] o_debug_triangle_index,
+    output reg [31:0] o_debug_num_triangles
 );
 
 // data loaded from module API on i_start
@@ -396,6 +397,7 @@ begin
                 end else begin
                     // start assembling the next triangle    
                     r_state <= LOAD_INDEX_BUFFER;
+                    r_state_counter <= 0;
                 end
             end
             ERROR: begin
@@ -425,6 +427,7 @@ begin
     o_debug_state = r_state;
     o_debug_state_counter = r_state_counter;
     o_debug_triangle_index = r_triangle_index;
+    o_debug_num_triangles = r_num_triangles;
 
     case (r_state)
         READY: begin
