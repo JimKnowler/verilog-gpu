@@ -108,4 +108,24 @@ function `FixedPoint_t fixed_point_max3;
     end
 endfunction
 
+function `FixedPoint_t fixed_point_min;
+    input `FixedPoint_t a, b;
+
+    begin
+        fixed_point_min = (a < b) 
+                ? a
+                : b;
+    end
+endfunction
+
+function `FixedPoint_t fixed_point_max;
+    input `FixedPoint_t a, b;
+
+    begin
+        fixed_point_max = (a > b) 
+                ? a 
+                : b;
+    end
+endfunction
+
 `endif // FIXEDPOINT_VH
