@@ -320,7 +320,7 @@ begin
                     o_memory_address <= memory_address_vertex_buffer_position(r_i3, 3);
                 end
                 12: begin
-                    r_n3.w <= i_memory_data;
+                    r_v3.w <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_normal(r_i1, 0);
                 end
                 13: begin
@@ -371,7 +371,6 @@ begin
                     r_n3.w <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 0);
                 end
-
                 25: begin
                     r_c1.x <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 1);
