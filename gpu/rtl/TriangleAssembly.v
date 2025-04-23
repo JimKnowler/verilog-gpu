@@ -18,6 +18,8 @@ module TriangleAssembly(
     input `FixedPoint_t i_screenWidth,      // width of screen that we are rendering to
     input `FixedPoint_t i_screenHeight,     // height of screen that we are rendering to
 
+    input Vector4_t i_light_direction,      // direction that directional light is pointing in
+
     input i_rasterizer_ready,               // raise this input to pause the TriangleAssembly pipeline (i.e. if all Triangle Rasterizers are busy)
                                             // The pipeline will pause at the state of outputting a triangle
     
@@ -48,6 +50,7 @@ Matrix44_t r_world;
 Matrix44_t r_view_projection;
 reg `FixedPoint_t r_screenWidth;
 reg `FixedPoint_t r_screenHeight;
+Vector4_t r_light_direction;
 
 // internal state data
 typedef enum logic [3:0] {
@@ -74,6 +77,7 @@ reg [31:0] r_triangle_index;                // index into sequence of triangles
 
 reg [31:0] r_i1, r_i2, r_i3;                // Vertex Indices
 Vector4_t r_v1, r_v2, r_v3;                 // Vertex positions
+Vector4_t r_n1, r_n2, r_n3;                 // Normal positions
 Vector4_t r_c1, r_c2, r_c3;                 // Vertex colours
 
 function [31:0] memory_address_index_buffer;
@@ -92,6 +96,16 @@ function [31:0] memory_address_vertex_buffer_position;
 
     begin
         memory_address_vertex_buffer_position = r_address_vertex_buffer + (((12 * vertex_index) + component_index) * 4);
+    end
+endfunction
+
+// generate memory address for a component (x,y,z,w) of the normal field of a vertex
+function [31:0] memory_address_vertex_buffer_normal;
+    input [31:0] vertex_index;
+    input [31:0] component_index;
+
+    begin
+        memory_address_vertex_buffer_normal = r_address_vertex_buffer + (((12 * vertex_index) + 4 + component_index) * 4);
     end
 endfunction
 
@@ -135,6 +149,33 @@ VertexTransform view_project_v3(
     .o_vertex(r_view_project_v3)
 );
 
+// Lighting
+
+Vector4_t r_lit_c1;
+Vector4_t r_lit_c2;
+Vector4_t r_lit_c3;
+
+Lighting lighting_v1(
+    .i_colour(r_c1),
+    .i_normal(r_n1),
+    .i_light_direction(r_light_direction),
+    .o_colour(r_lit_c1)
+);
+
+Lighting lighting_v2(
+    .i_colour(r_c2),
+    .i_normal(r_n2),
+    .i_light_direction(r_light_direction),
+    .o_colour(r_lit_c2)
+);
+
+Lighting lighting_v3(
+    .i_colour(r_c3),
+    .i_normal(r_n3),
+    .i_light_direction(r_light_direction),
+    .o_colour(r_lit_c3)
+);
+
 // Back face culling
 reg r_cull;
 
@@ -175,6 +216,7 @@ begin
         r_view_projection <= i_view_projection;
         r_screenWidth <= i_screenWidth;
         r_screenHeight <= i_screenHeight;
+        r_light_direction <= i_light_direction;
 
         // initialise state
         r_state <= LOAD_INDEX_BUFFER;
@@ -224,11 +266,7 @@ begin
                 endcase
             end
             LOAD_VERTEX_BUFFER: begin
-                // load 3 x vertices (position + colour) into local registers
-
-                // TODO: is there a shorter/cleaner way of writing this out?
-                // - remove repetition
-                // - macro to abbreviate each case to a single, easy to ready line?
+                // load 3 x vertices (position + normal + colour) into local registers
 
                 o_memory_read <= 1;
                 r_state_counter <= r_state_counter + 1;
@@ -282,54 +320,103 @@ begin
                     o_memory_address <= memory_address_vertex_buffer_position(r_i3, 3);
                 end
                 12: begin
-                    r_v3.w <= i_memory_data;
-                    o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 0);
+                    r_n3.w <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i1, 0);
                 end
                 13: begin
+                    r_n1.x <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i1, 1);
+                end
+                14: begin
+                    r_n1.y <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i1, 2);
+                end
+                15: begin
+                    r_n1.z <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i1, 3);
+                end
+                16: begin
+                    r_n1.w <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i2, 0);
+                end
+                17: begin
+                    r_n2.x <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i2, 1);
+                end
+                18: begin
+                    r_n2.y <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i2, 2);
+                end
+                19: begin
+                    r_n2.z <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i2, 3);
+                end
+                20: begin
+                    r_n2.w <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i3, 0);
+                end
+                21: begin
+                    r_n3.x <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i3, 1);
+                end
+                22: begin
+                    r_n3.y <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i3, 2);
+                end
+                23: begin
+                    r_n3.z <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_normal(r_i3, 3);
+                end
+                24: begin
+                    r_n3.w <= i_memory_data;
+                    o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 0);
+                end
+
+                25: begin
                     r_c1.x <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 1);
                 end
-                14: begin
+                26: begin
                     r_c1.y <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 2);
                 end
-                15: begin
+                27: begin
                     r_c1.z <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i1, 3);
                 end
-                16: begin
+                28: begin
                     r_c1.w <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i2, 0);
                 end
-                17: begin
+                29: begin
                     r_c2.x <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i2, 1);
                 end
-                18: begin
+                30: begin
                     r_c2.y <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i2, 2);
                 end
-                19: begin
+                31: begin
                     r_c2.z <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i2, 3);
                 end
-                20: begin
+                32: begin
                     r_c2.w <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i3, 0);
                 end
-                21: begin
+                33: begin
                     r_c3.x <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i3, 1);
                 end
-                22: begin
+                34: begin
                     r_c3.y <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i3, 2);
                 end
-                23: begin
+                35: begin
                     r_c3.z <= i_memory_data;
                     o_memory_address <= memory_address_vertex_buffer_colour(r_i3, 3);
                 end
-                24: begin
+                36: begin
                     r_c3.w <= i_memory_data;
                     o_memory_read <= 0;
                     
@@ -345,10 +432,18 @@ begin
                 r_v2 <= matrix_multiply_vector(r_world, r_v2);
                 r_v3 <= matrix_multiply_vector(r_world, r_v3);
 
+                r_n1 <= matrix_multiply_vector(r_world, r_n1);
+                r_n2 <= matrix_multiply_vector(r_world, r_n2);
+                r_n3 <= matrix_multiply_vector(r_world, r_n3);
+
                 r_state <= LIGHT;
             end
             LIGHT: begin
-                // TODO: light 3 x vertices in world space
+                // light 3 x vertices in world space
+
+                r_c1 <= r_lit_c1;
+                r_c2 <= r_lit_c2;
+                r_c3 <= r_lit_c3;
 
                 r_state <= TRANSFORM_VIEW_PROJECTION;
 

@@ -418,6 +418,7 @@ void App::StartTriangleAssembly()
     
     TriangleAssembly.i_screenWidth = ToFixedPoint(kRasterSize.x);
     TriangleAssembly.i_screenHeight = ToFixedPoint(kRasterSize.y);
+    HelperSetFixedPointVector(TriangleAssembly.i_light_direction, kLightDirection);
     TriangleAssembly.i_start = 1;
     TriangleAssembly.i_memory_data = 0;
 
@@ -431,6 +432,7 @@ void App::StartTriangleAssembly()
     HelperSetFixedPointMatrix(TriangleAssembly.i_view_projection, FMatrix44::Zero());
     TriangleAssembly.i_screenWidth = 0;
     TriangleAssembly.i_screenHeight = 0;
+    HelperSetFixedPointVector(TriangleAssembly.i_light_direction, FVector4());
     TriangleAssembly.i_start = 0;
 
     StepTriangleAssembly();
