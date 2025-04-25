@@ -54,11 +54,11 @@ Vector4_t r_light_direction;
 
 // internal state data
 typedef enum logic [3:0] {
-    READY,                                   // waiting for i_start to be raised
+    READY,                                  // waiting for i_start to be raised
     LOAD_INDEX_BUFFER,                      // load 3 x indexes from index buffer
     LOAD_VERTEX_BUFFER,                     // load 3 x vertices (local space) from vertex buffer
                                             //  - Position
-                                            //  - Normal (TODO)
+                                            //  - Normal
                                             //  - Colour
     TRANSFORM_WORLD,                        // apply world transform to vertices (local space) to get vertices (world space)
     LIGHT,                                  // modify vertex colours (world space)
