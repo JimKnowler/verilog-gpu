@@ -18,21 +18,21 @@ endif()
 
 include_directories(.)
 
+#
+# Main Application
+#
+
 add_executable(Main 
     gpu/App.cpp
     gpu/Vector4.cpp
     gpu/Matrix44.cpp
     gpu/VerilatorHelpers.cpp
     gpu/FixedPointVector4.cpp
+    gpu/Model.cpp
 )
 
 verilate(Main SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
 verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
-
-# TODO: remove these modules, when TriangleAssembly is operational
-verilate(Main SOURCES gpu/rtl/TriangleBackFaceCull.v INCLUDE_DIRS gpu/rtl)
-verilate(Main SOURCES gpu/rtl/VertexTransform.v INCLUDE_DIRS gpu/rtl)
-
 
 target_link_libraries(Main PRIVATE
     "-framework OpenGL"
@@ -40,7 +40,7 @@ target_link_libraries(Main PRIVATE
 )
 
 #
-# GoogleTest
+# GoogleTest Library
 #
 
 # download google test

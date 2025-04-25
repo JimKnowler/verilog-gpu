@@ -12,9 +12,9 @@
 #include "VTriangleAssembly.h"
 #include "VTriangleRasterizer.h"
 
-// Math
+// Gpu
 #include "Matrix44.h"
-#include "FixedPointVertex.h"
+#include "Model.h"
 
 class App : public olc::PixelGameEngine
 {
@@ -87,8 +87,6 @@ private:
     ///////////////////////////////////
     // Model Description
 
-    int NumTriangles = 0;
+    FModel Model;
     
-    std::vector<FFixedPointVertex> VertexBuffer;
-    std::vector<uint32_t> IndexBuffer;
 };
