@@ -28,6 +28,9 @@ namespace {
 
     // Directional light
     const FVector4 kLightDirection = FVector4(1.0f, 0.5f, -1.0f).Normalise();
+
+    // Cube model size
+    const float kCubeRadius = 50.0f;
 }
 
 int main(int argc, char* argv[])
@@ -62,6 +65,7 @@ bool App::OnUserCreate()
     InitAnimation();
     InitRasterizer();
     InitTriangleAssembly();
+    InitMemory();
 
     StartTriangleAssembly();
 
@@ -223,11 +227,6 @@ FMatrix44 App::MakeViewProjectionTransform() const
     return Transform;
 }
 
-namespace 
-{
-    const float kCubeRadius = 50.0f;
-}
-
 void App::InitModel()
 {
     Model.InitCube(kCubeRadius);
@@ -282,9 +281,11 @@ void App::InitTriangleAssembly()
     
     TriangleAssembly.i_reset_n = 1;
     TriangleAssembly.eval();
+}
 
+void App::InitMemory()
+{
     // Prepare memory for Triangle Assembly
-    // TODO: convert this into a class?
 
     const std::vector<uint32_t>& IndexBuffer = Model.IndexBuffer;
     const std::vector<FFixedPointVertex>& VertexBuffer = Model.VertexBuffer;

@@ -59,6 +59,7 @@ private:
     FMatrix44 MakeViewProjectionTransform() const;
 
     void InitModel();
+    void InitMemory();
 
     ///////////////////////////////////
     // Render Buffers
