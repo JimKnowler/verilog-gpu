@@ -15,8 +15,11 @@ module TriangleRasterizerPixel (
     // RGBA colour output of rasterized pixel
     output Vector4_t o_colour,
 
+    // FixedPoint: z co-ordinate of rasterized pixel
+    output reg `FixedPoint_t o_z,
+
     // signals when a pixel inside the triangle is being written
-    output o_write
+    output reg o_write
 );
 
 /*
@@ -68,14 +71,20 @@ begin
     o_colour.y = 0;
     o_colour.z = 0;
     o_colour.w = 0;
+    o_z = 0;
     o_write = 0;
 
     if ((r_w1 >= 0) && (r_w2 >= 0) && (r_w3 >= 0))
     begin
+        // interpolate colour
         o_colour.x = fixed_point_multiply(r_w1_norm, i_c1.x) + fixed_point_multiply(r_w2_norm, i_c2.x) + fixed_point_multiply(r_w3_norm, i_c3.x);
         o_colour.y = fixed_point_multiply(r_w1_norm, i_c1.y) + fixed_point_multiply(r_w2_norm, i_c2.y) + fixed_point_multiply(r_w3_norm, i_c3.y);
         o_colour.z = fixed_point_multiply(r_w1_norm, i_c1.z) + fixed_point_multiply(r_w2_norm, i_c2.z) + fixed_point_multiply(r_w3_norm, i_c3.z);
         o_colour.w = uint8_to_fixed_point(1);
+
+        // interpolate z
+        o_z = fixed_point_multiply(r_w1_norm, i_v1.z) + fixed_point_multiply(r_w2_norm, i_v2.z) + fixed_point_multiply(r_w3_norm, i_v3.z);
+
         o_write = 1;
     end
 end

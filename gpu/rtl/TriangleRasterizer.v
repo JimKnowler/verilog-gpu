@@ -14,6 +14,7 @@ module TriangleRasterizer (
     output Vector4_t o_colour,
     output reg signed [31:0] o_x,
     output reg signed [31:0] o_y,
+    output reg `FixedPoint_t o_z,
 
     // signal (continously) that the rasterizer is ready to start rasterizing a new triangle
     output reg o_ready
@@ -69,6 +70,7 @@ TriangleRasterizerPixel pixel(
     .i_c2(r_c2),
     .i_c3(r_c3),
     .o_colour(o_colour),
+    .o_z(o_z),
     .o_write(w_write)
 );
 
