@@ -13,4 +13,6 @@ struct FModel
     std::vector<uint32_t> IndexBuffer;
 
     void InitCube(float Radius);
+
+    void InitLandscape();
 };
