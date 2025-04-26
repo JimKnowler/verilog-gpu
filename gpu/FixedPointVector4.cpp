@@ -29,3 +29,13 @@ FFixedPointVector4::FFixedPointVector4(const FVector4 &Other)
 {
     *this = Other;
 }
+
+FVector4 FFixedPointVector4::ToVector4() const
+{
+    return FVector4(
+        FromFixedPoint(X),
+        FromFixedPoint(Y),
+        FromFixedPoint(Z),
+        FromFixedPoint(W)
+    );
+}

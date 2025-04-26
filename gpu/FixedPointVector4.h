@@ -16,4 +16,6 @@ struct FFixedPointVector4
     FFixedPointVector4& operator=(const FVector4& Other);
 
     FFixedPointVector4(const FVector4& Other);
+
+    FVector4 ToVector4() const;
 };
