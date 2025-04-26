@@ -2,6 +2,9 @@
 #include "FixedPoint.h"
 #include "VerilatorHelpers.h"
 
+// whether to use the landscape model instead of the cube
+#define ENABLE_MODEL_LANDSCAPE 1
+
 namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
@@ -157,7 +160,11 @@ void App::InitAnimation()
 void App::TickAnimation()
 {
     const float DeltaTime = 0.1f;
+#if ENABLE_MODEL_LANDSCAPE
+    const float RotationSpeed = M_PI / 10.0f;
+#else
     const float RotationSpeed = M_PI / 2.0f;
+#endif
 
     Rotation += (DeltaTime * RotationSpeed);
     Rotation = fmodf(Rotation, 2.0f * M_PI);
@@ -200,13 +207,17 @@ void App::SwapRenderBuffers()
 
 FMatrix44 App::MakeWorldTransform() const
 {
+#if ENABLE_MODEL_LANDSCAPE
+    const FMatrix44 Transform = FMatrix44::RotateX(DegreesToRadians(-45.0f)) * FMatrix44::RotateY(Rotation) * FMatrix44::RotateX(DegreesToRadians(90.0f));
+#else
     // orient the model in 3D space
     const FMatrix44 LocalTransform = FMatrix44::RotateX(DegreesToRadians(45.0f));
     
-    // rotate the model around the Y axis
+    // rotate the model
     const FMatrix44 WorldTransform = FMatrix44::RotateY(Rotation) * FMatrix44::RotateZ(Rotation);
     
     const FMatrix44 Transform = WorldTransform * LocalTransform;
+#endif
 
     return Transform;
 }
@@ -229,7 +240,11 @@ FMatrix44 App::MakeViewProjectionTransform() const
 
 void App::InitModel()
 {
+#if ENABLE_MODEL_LANDSCAPE
+    Model.InitLandscape();
+#else
     Model.InitCube(kCubeRadius);
+#endif
 }
 
 void App::InitRasterizer()
