@@ -7,7 +7,7 @@
 constexpr float kFixedPointLambda = 0.005f;
 
 // number of bits used for the fractional part
-constexpr int kFractionWidth = 14;
+constexpr int kFractionWidth = 17;
 
 template <int kFraction = kFractionWidth>
 uint32_t ToFixedPoint(float Value)

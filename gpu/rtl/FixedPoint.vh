@@ -2,7 +2,7 @@
 `define FIXEDPOINT_VH
 
 `define FIXEDPOINT_WIDTH 32
-`define FIXEDPOINT_FRACTION 14
+`define FIXEDPOINT_FRACTION 17
 
 `define FixedPoint_t signed [`FIXEDPOINT_WIDTH-1:0]
 
