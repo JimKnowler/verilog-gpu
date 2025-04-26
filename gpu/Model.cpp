@@ -127,7 +127,7 @@ void FModel::InitLandscape()
     const int Resolution = 50;
     const float CellRadius = Radius / float(Resolution);
 
-    const FVector4 kLandscapeColour(0.0f, 0.0f, 1.0f, 1.0f);
+    const FVector4 kLandscapeColour = Green;
 
     auto GetIndex = [](int x, int y) -> int {
         return (y * (Resolution+1)) + x;
@@ -137,6 +137,7 @@ void FModel::InitLandscape()
     const double NoiseOffsetY = 0.0f;
     const double NoiseScale = 10.0f;
 
+    // center peak
     for (int y=0; y<=Resolution; y++)
     {
         for (int x=0; x<=Resolution; x++)
@@ -152,6 +153,25 @@ void FModel::InitLandscape()
             });
         }
     }    
+
+    // small peak in top left corner
+    const int SmallPeakResolution = Resolution / 5;
+    const float HeightSmallPeak = Height / 4;
+    
+    for (int y=0; y<=SmallPeakResolution; y++)
+    {
+        for (int x=0; x<=SmallPeakResolution; x++)
+        {
+            const float siny = sinf(M_PI * float(y) / float(SmallPeakResolution));
+            const float sinx = sinf(M_PI * float(x) / float(SmallPeakResolution));
+            const float strength = 4.0f;
+            const float Value = powf(siny, strength) * powf(sinx, strength);
+            
+            FFixedPointVertex& Vertex = VertexBuffer[GetIndex(x, y)];
+            Vertex.Position.Z += ToFixedPoint(Value * HeightSmallPeak);
+            Vertex.Colour = (Vertex.Colour.ToVector4() * (1.0f-Value)) + (Red * Value);
+        }
+    }   
 
     auto GetNormal = [&](int x, int y) -> FVector4 {    
         const int xa = (x == 0) ? x : x-1;
