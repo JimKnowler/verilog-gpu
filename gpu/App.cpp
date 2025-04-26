@@ -5,6 +5,9 @@
 // whether to use the landscape model instead of the cube
 #define ENABLE_MODEL_LANDSCAPE 1
 
+// whether to use z-test with the z buffer
+#define ENABLE_Z_TEST 1
+
 namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
@@ -23,6 +26,7 @@ namespace {
     }
 
     const olc::Pixel kClearColour = olc::WHITE;
+    const uint32_t kClearZ = ToFixedPoint(10000.0f);
 
     // View Transform
     const FVector4 Eye(0, 0, 400, 1);               // location of camera
@@ -59,11 +63,8 @@ bool App::OnUserCreate()
 {
     printf("OnUserCreate\n");
 
-    for (int i=0; i<kNumRenderBuffers; i++)
-    {
-        RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
-    }
-            
+    InitRenderBuffers();
+    InitZBuffer();            
     InitModel();
     InitAnimation();
     InitRasterizer();
@@ -106,6 +107,7 @@ void App::Update(float DeltaTime)
             
             SwapRenderBuffers();
             ClearBackBuffer();
+            ClearZBuffer();
             TickAnimation();
             StartTriangleAssembly();
         
@@ -132,8 +134,17 @@ void App::RenderPixelFromRasterizerToBackBuffer()
 #endif
 
     const int Index = GetRenderBufferPixelIndex(x, y);
+    uint32_t& Depth = ZBuffer[Index];
     olc::Pixel& Pixel = GetBackBuffer()[Index];
     
+#if ENABLE_Z_TEST
+    const uint32_t Z = Rasterizer.o_z;
+    if (FromFixedPoint(Z) > FromFixedPoint(Depth))
+    {
+        return;
+    }
+#endif
+
     const FVector4 Colour = HelperGetFixedPointVector(Rasterizer.o_colour);
 
     const std::function FloatToUint8 = [](float Value) -> uint8_t {
@@ -145,6 +156,10 @@ void App::RenderPixelFromRasterizerToBackBuffer()
     const uint8_t b = FloatToUint8(Colour.Z);
 
     Pixel = olc::Pixel(r, g, b);
+
+#if ENABLE_Z_TEST
+    Depth = Z;
+#endif
 }
 
 int App::GetRenderBufferPixelIndex(int x, int y) const
@@ -197,6 +212,15 @@ void App::ClearBackBuffer()
     }
 }
 
+void App::ClearZBuffer()
+{
+    const int kNumPixels = kRasterSize.x * kRasterSize.y;
+    for (int i=0; i<kNumPixels; i++)
+    {
+        ZBuffer[i] = kClearZ;
+    }
+}
+
 void App::SwapRenderBuffers()
 {
     assert(FrontBuffer >= 0);
@@ -236,6 +260,19 @@ FMatrix44 App::MakeViewProjectionTransform() const
     const FMatrix44 Transform = Projection * View;
 
     return Transform;
+}
+
+void App::InitRenderBuffers()
+{
+    for (int i=0; i<kNumRenderBuffers; i++)
+    {
+        RenderBuffers[i].resize(kRasterSize.x * kRasterSize.y, kClearColour);    
+    }
+}
+
+void App::InitZBuffer()
+{
+    ZBuffer.resize(kRasterSize.x * kRasterSize.y, kClearZ);
 }
 
 void App::InitModel()

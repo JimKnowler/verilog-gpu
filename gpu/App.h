@@ -42,11 +42,14 @@ private:
     void InitAnimation();
     void TickAnimation();
     
+    void InitRenderBuffers();
+    void InitZBuffer();
     int GetRenderBufferPixelIndex(int x, int y) const;
     std::vector<olc::Pixel>& GetBackBuffer();
     std::vector<olc::Pixel>& GetFrontBuffer();
     void SwapRenderBuffers();
     void ClearBackBuffer();
+    void ClearZBuffer();
 
     void InitRasterizer();
     void StepRasterizer();
@@ -71,6 +74,7 @@ private:
 
     int FrontBuffer = 0;
     std::vector<olc::Pixel> RenderBuffers[kNumRenderBuffers];
+    std::vector<uint32_t> ZBuffer;
 
     ///////////////////////////////////
     // Verilog Render pipeline
