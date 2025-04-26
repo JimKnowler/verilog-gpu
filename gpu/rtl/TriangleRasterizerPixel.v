@@ -54,9 +54,9 @@ always @(*)
 begin
     r_x = int32_to_fixed_point(i_x);
     r_y = int32_to_fixed_point(i_y);
-    r_w1 = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, r_x, r_y);
-    r_w2 = edge_function(i_v2.x, i_v2.y, i_v3.x, i_v3.y, r_x, r_y);
-    r_w3 = edge_function(i_v3.x, i_v3.y, i_v1.x, i_v1.y, r_x, r_y);
+    r_w1 = edge_function(i_v2.x, i_v2.y, i_v3.x, i_v3.y, r_x, r_y);
+    r_w2 = edge_function(i_v3.x, i_v3.y, i_v1.x, i_v1.y, r_x, r_y);
+    r_w3 = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, r_x, r_y);
 
     r_area = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, i_v3.x, i_v3.y);
 
