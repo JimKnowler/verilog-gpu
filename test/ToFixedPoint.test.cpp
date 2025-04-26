@@ -25,9 +25,9 @@ TEST(ToFixedPoint, ShouldSupportQuarter)
 
 TEST(ToFixedPoint, ShouldSupportPi)
 {
-    const uint32_t kPiFractionWidth14 = 51445;
+    const uint32_t kPiFractionWidth17 = 411566;
 
-    EXPECT_EQ(kPiFractionWidth14, ToFixedPoint(3.14f));
+    EXPECT_EQ(kPiFractionWidth17, ToFixedPoint(3.14f));
 }
 
 TEST(ToFixedPoint, ShouldSupportMinusOne)

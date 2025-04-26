@@ -27,7 +27,7 @@ TEST(FromFixedPoint, ShouldSupportQuarter)
 
 TEST(FromFixedPoint, ShouldSupportPi)
 {
-    const uint32_t kPiFractionWidth14 = 51445;
+    const uint32_t kPiFractionWidth17 = 411566;
 
-    HelperExpectEq(3.14f, FromFixedPoint(kPiFractionWidth14));
+    HelperExpectEq(3.14f, FromFixedPoint(kPiFractionWidth17));
 }
