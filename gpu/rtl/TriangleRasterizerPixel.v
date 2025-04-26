@@ -40,9 +40,6 @@ function `FixedPoint_t edge_function;
     end
 endfunction
 
-// TODO: precompute edge function coefficients for triangle
-// -> ready for the form EdgeFunction = Ax + By + C
-
 reg `FixedPoint_t r_x;
 reg `FixedPoint_t r_y;
 reg `FixedPoint_t r_w1;
@@ -53,6 +50,11 @@ reg `FixedPoint_t r_w1_norm;
 reg `FixedPoint_t r_w2_norm;
 reg `FixedPoint_t r_w3_norm;
 
+reg `FixedPoint_t r_z_inv;
+reg `FixedPoint_t r_v1_z_inv;
+reg `FixedPoint_t r_v2_z_inv;
+reg `FixedPoint_t r_v3_z_inv;
+
 always @(*)
 begin
     r_x = int32_to_fixed_point(i_x);
@@ -60,6 +62,11 @@ begin
     r_w1 = edge_function(i_v2.x, i_v2.y, i_v3.x, i_v3.y, r_x, r_y);
     r_w2 = edge_function(i_v3.x, i_v3.y, i_v1.x, i_v1.y, r_x, r_y);
     r_w3 = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, r_x, r_y);
+
+    r_z_inv = 0;
+    r_v1_z_inv = fixed_point_divide(uint8_to_fixed_point(1), i_v1.z);
+    r_v2_z_inv = fixed_point_divide(uint8_to_fixed_point(1), i_v2.z);
+    r_v3_z_inv = fixed_point_divide(uint8_to_fixed_point(1), i_v3.z);
 
     r_area = edge_function(i_v1.x, i_v1.y, i_v2.x, i_v2.y, i_v3.x, i_v3.y);
 
@@ -82,8 +89,9 @@ begin
         o_colour.z = fixed_point_multiply(r_w1_norm, i_c1.z) + fixed_point_multiply(r_w2_norm, i_c2.z) + fixed_point_multiply(r_w3_norm, i_c3.z);
         o_colour.w = uint8_to_fixed_point(1);
 
-        // interpolate z
-        o_z = fixed_point_multiply(r_w1_norm, i_v1.z) + fixed_point_multiply(r_w2_norm, i_v2.z) + fixed_point_multiply(r_w3_norm, i_v3.z);
+        // interpolate 1/z
+        r_z_inv = fixed_point_multiply(r_w1_norm, r_v1_z_inv) + fixed_point_multiply(r_w2_norm, r_v2_z_inv) + fixed_point_multiply(r_w3_norm, r_v3_z_inv);
+        o_z = fixed_point_divide(uint8_to_fixed_point(1), r_z_inv);
 
         o_write = 1;
     end
