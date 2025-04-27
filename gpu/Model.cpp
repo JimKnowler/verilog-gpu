@@ -127,7 +127,7 @@ void FModel::InitLandscape()
     const int Resolution = 50;
     const float CellRadius = Radius / float(Resolution);
 
-    const FVector4 kLandscapeColour = Green;
+    const FVector4 kLandscapeColour = FVector4(0.0, 0.5f, 1.0f, 1.0f);
 
     auto GetIndex = [](int x, int y) -> int {
         return (y * (Resolution+1)) + x;
