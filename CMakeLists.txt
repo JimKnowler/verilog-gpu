@@ -73,6 +73,7 @@ add_executable(TestRtl
     test/TriangleRasterizerTiming.test.cpp
     test/TriangleBackFaceCull.test.cpp
     test/TriangleAssembly.test.cpp
+    test/UnsignedDivide.test.cpp
     test/VectorDotProduct.test.cpp
     test/VectorAddVector.test.cpp
     test/VectorSubVector.test.cpp
@@ -105,6 +106,8 @@ verilate(TestRtl SOURCES gpu/rtl/VectorSelect.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/TriangleRasterizerTiming.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/TriangleBackFaceCull.v INCLUDE_DIRS gpu/rtl)
 verilate(TestRtl SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
+verilate(TestRtl SOURCES gpu/rtl/UnsignedDivide.v INCLUDE_DIRS gpu/rtl)
+
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 
