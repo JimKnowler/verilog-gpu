@@ -5,6 +5,8 @@ project(verilog-gpu CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
+enable_testing()
+
 # based on verilator documentation
 # https://veripool.org/guide/latest/verilating.html#cmake
 
@@ -53,8 +55,6 @@ FetchContent_Declare(
 # prevent googletest from overriding our compiler/linker options
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-
-enable_testing()
 
 #
 # Unit Tests
@@ -111,4 +111,5 @@ verilate(TestRtl SOURCES gpu/rtl/UnsignedDivide.v INCLUDE_DIRS gpu/rtl)
 
 target_link_libraries(TestRtl PRIVATE gtest_main)
 
-add_test(NAME TestRtl COMMAND TestRtl)
+include(GoogleTest)
+gtest_discover_tests(TestRtl)
