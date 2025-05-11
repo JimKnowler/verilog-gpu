@@ -30,8 +30,8 @@ public:
         int TickCount = 0;
         while (Module.o_valid == 0)
         {
-            EXPECT_EQ(Module.o_ready, 0);
-            TestBench.Tick();
+            ASSERT_EQ(Module.o_ready, 0);
+            TestBench.Tick();           
 
             // prevent infinite loop
             TickCount += 1;
@@ -69,8 +69,17 @@ TEST_F(UnsignedDivide, ShouldReset)
     EXPECT_EQ(Module.o_valid, 0);
 }
 
+TEST_F(UnsignedDivide, ShouldDivideTwelveBySeven)
+{
+    HelperTestDivide(12, 7);
+}
+
 TEST_F(UnsignedDivide, ShouldDivideTwelveBySix)
 {
     HelperTestDivide(12, 6);
 }
 
+TEST_F(UnsignedDivide, ShouldDivideTwelveByFive)
+{
+    HelperTestDivide(12, 5);
+}
