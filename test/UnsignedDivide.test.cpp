@@ -38,9 +38,6 @@ public:
             ASSERT_LT(TickCount, 100);
         }
         
-        const int ActualQuotient = Module.o_quotient;
-        const int ActualRemainder = Module.o_remainder;
-
         EXPECT_EQ(Module.o_ready, 1);
         
         TestBench.Tick();
@@ -48,7 +45,12 @@ public:
         EXPECT_EQ(Module.o_valid, 0);
 
         const int ExpectedQuotient = Dividend / Divisor;
+        const int ActualQuotient = Module.o_quotient;
+        EXPECT_EQ(ExpectedQuotient, ActualQuotient);
+        
         const int ExpectedRemainder = Dividend % Divisor;
+        const int ActualRemainder = Module.o_remainder;
+        EXPECT_EQ(ExpectedRemainder, ActualRemainder);
     }
 };
 
