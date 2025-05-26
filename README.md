@@ -24,9 +24,9 @@ FPGA/Verilog implementation of a basic GPU
 
 Built on MacOS
 
-Using Homebrew package manager
+To install with [Brew](https://brew.sh/):
 ```
-brew install verilator 
+brew install verilator cmake libpng
 ```
 
 ## Build
