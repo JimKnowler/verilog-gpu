@@ -97,31 +97,62 @@ int Rasterizers::GetRenderBufferPixelIndex(int x, int y) const
 
 void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<olc::Pixel>& RenderBuffer)
 {
-    auto EdgeFunction = [](int x, int y, const olc::vi2d& v1, const olc::vi2d& v2) -> int {
-#if 1
-        const int a = v1.y - v2.y;
-        const int b = v2.x - v1.x;
-        const int c = (v1.x * v2.y) - (v2.x * v1.y);
-
-        const int e = (a * x) + (b * y) + c;
-#else
-        const int e = ((v2.x - v1.x) * (y - v1.y)) - ((v2.y - v1.y) * (x - v1.x));
-#endif
-
-        return e;
+    auto EdgeFunction = [](const olc::vi2d& v1, const olc::vi2d& v2, int& a, int& b, int& c) -> void {
+        a = v1.y - v2.y;
+        b = v2.x - v1.x;
+        c = (v1.x * v2.y) - (v2.x * v1.y);
     };
 
-    for (int y=0; y<kRasterSize.y; y++)
-    {
-        for (int x=0; x<kRasterSize.x; x++) 
-        {
-            const int w1 = EdgeFunction(x, y, Triangle.v2, Triangle.v3);
-            const int w2 = EdgeFunction(x, y, Triangle.v3, Triangle.v1);
-            const int w3 = EdgeFunction(x, y, Triangle.v1, Triangle.v2);
+    int a1, b1, c1, a2, b2, c2, a3, b3, c3;
+    EdgeFunction(Triangle.v2, Triangle.v3, a1, b1, c1);
+    EdgeFunction(Triangle.v3, Triangle.v1, a2, b2, c2);
+    EdgeFunction(Triangle.v1, Triangle.v2, a3, b3, c3);
 
-            const int PixelIndex = GetRenderBufferPixelIndex(x, y);
-            const bool bIsInside = (w1 >=0) && (w2 >= 0) && (w3 >= 0);
-            RenderBuffer[PixelIndex] = bIsInside ? olc::RED : olc::BLACK;
+    int e1 = c1;
+    int e2 = c2;
+    int e3 = c3;
+
+    int x = 0;
+    int y = 0;
+    bool bIsMovingRight = true;
+
+    while (true)
+    {
+        // rasterize pixel
+        const int PixelIndex = GetRenderBufferPixelIndex(x, y);
+        const bool bIsInside = (e1 >=0) && (e2 >= 0) && (e3 >= 0);
+        RenderBuffer[PixelIndex] = bIsInside ? olc::RED : olc::BLACK;
+
+        // plan next move: left, right, or down
+        const int NextX = bIsMovingRight ? x + 1 : x - 1;
+
+        if ((NextX >= 0) && (NextX < kRasterSize.x)) {
+            x = NextX;
+
+            if (bIsMovingRight)
+            {
+                e1 += a1;
+                e2 += a2;
+                e3 += a3;
+            } else {
+                e1 -= a1;
+                e2 -= a2;
+                e3 -= a3;
+            }
+        } else {
+            bIsMovingRight = !bIsMovingRight;
+
+            const int NextY = y + 1;
+            if (NextY >= kRasterSize.y)
+            {
+                return;
+            }
+
+            y = NextY;
+            
+            e1 += b1;
+            e2 += b2;
+            e3 += b3;
         }
     }
 }
