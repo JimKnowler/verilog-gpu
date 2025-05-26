@@ -6,6 +6,10 @@ FPGA/Verilog implementation of a basic GPU
 - fixed point calculations
 - aiming for feature set comparable to mid/late 90's Graphics Card https://www.techpowerup.com/gpu-specs/voodoo-graphics-4-mb.c3570
 
+![Spinning Cube in Simulation](./docs/Simulation-Cube.gif)
+
+![Spinning Landscape in Simulation](./docs/Simulation-Landscape.gif)
+
 ## Progress
 
 ### ~Simulation~
