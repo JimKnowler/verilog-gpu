@@ -67,11 +67,11 @@ void Rasterizers::Render()
         .v3 = { 150, 350 }
     };
 
-    std::vector<olc::Pixel> RenderBufferBoundingBox(kRasterBufferSize);
+    std::vector<olc::Pixel> RenderBufferBoundingBox(kRasterBufferSize, olc::BLACK);
     RasterizeBoundingBox(Triangle, RenderBufferBoundingBox);
     DrawRenderBuffer(kOriginBoundingBox, RenderBufferBoundingBox);
 
-    std::vector<olc::Pixel> RenderBufferZigZag(kRasterBufferSize);
+    std::vector<olc::Pixel> RenderBufferZigZag(kRasterBufferSize, olc::BLACK);
     RasterizeZigZag(Triangle, RenderBufferZigZag);
     DrawRenderBuffer(kOriginZigZag, RenderBufferZigZag);
 }
@@ -123,9 +123,12 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
         // TODO: implement logic for handling edge function == 0, at edge of adjoining triangles
         const bool bIsInside = (e1 >=0) && (e2 >= 0) && (e3 >= 0);
 
-        // rasterize pixel
-        const int PixelIndex = GetRenderBufferPixelIndex(x, y);
-        RenderBuffer[PixelIndex] = bIsInside ? olc::RED : olc::BLACK;
+        if (bIsInside)
+        {
+            // rasterize pixel
+            const int PixelIndex = GetRenderBufferPixelIndex(x, y);
+            RenderBuffer[PixelIndex] = olc::GREEN;
+        }
 
         // plan next move: left, right, or down
         const int NextX = x + dx;
@@ -190,11 +193,19 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
         v.y = y;
     };
 
+    auto RasterizePixel = [this, &RenderBuffer](const int x, const int y) -> void {
+        const int PixelIndex = GetRenderBufferPixelIndex(x, y);
+        RenderBuffer[PixelIndex] = olc::YELLOW;
+    };
+
     // find starting position
     olc::vi2d start;
     GetZigZagStartingVertex({Triangle.v1, Triangle.v2, Triangle.v3}, start);
     int x = start.x;
     int y = start.y;
+
+    // find finishing row
+    const int EndY = std::max(Triangle.v1.y, std::max(Triangle.v2.y, Triangle.v3.y));
 
     // initialise edge functions based on starting x,y
     int e1 = (a1 * x) + (b1 * y) + c1;
@@ -204,44 +215,100 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
     bool bIsMovingRight = true;
     int dx = 1;
 
+    enum class EState {
+        Searching,
+        PreRasterizing,
+        Rasterizing
+    };
+
+    EState State = EState::Rasterizing;
+
     while (true)
     {
-        // rasterize pixel
-        const int PixelIndex = GetRenderBufferPixelIndex(x, y);
         const bool bIsInside = (e1 >=0) && (e2 >= 0) && (e3 >= 0);
-        RenderBuffer[PixelIndex] = bIsInside ? olc::YELLOW : olc::BLACK;
 
-        // TODO: use bIsInside to determine whether to move down a row and search for 'outside' pixel
-        //     -> this probably requires a state machine for searching and rasterizing states
-        
-        const int NextX = x + dx;
+        if (bIsInside)
+        {
+            RasterizePixel(x, y);
+        }
 
-        if ((NextX >= 0) && (NextX < kRasterSize.x)) {
-            x = NextX;
+        switch (State)
+        {
+            case EState::Searching:
+                {
+                    // moving horizontally, while inside the triangle, until outside the triangle
 
-            e1 += a1;
-            e2 += a2;
-            e3 += a3;
-        } else {
-            // move vertically down one row
-            y += 1;
-            if (y >= kRasterSize.y)
-            {
-                return;
-            }
-            
-            e1 += b1;
-            e2 += b2;
-            e3 += b3;
+                    if (bIsInside)
+                    {
+                        // keep searching in the current direction for the first pixel 
+                        // that is 'outside'
+                        x += dx;
 
-            // alternate horizontal direction
-            bIsMovingRight = !bIsMovingRight;
-            
-            a1 = -a1;
-            a2 = -a2;
-            a3 = -a3;
+                        e1 += a1;
+                        e2 += a2;
+                        e3 += a3;    
+                    }
+                    else {
+                        // we have searched past the end of the 'inside' pixels
 
-            dx = -dx;
+                        // switch horizontal direction
+                        dx = -dx;
+                        a1 = -a1;
+                        a2 = -a2;
+                        a3 = -a3;
+
+                        State = EState::PreRasterizing;
+                    }
+                    
+                }
+                break;
+            case EState::PreRasterizing:
+                {
+                    // moving horizontally from outside, back towards inside the triangle
+
+                    if (bIsInside)
+                    {
+                        RasterizePixel(x, y);
+                        State = EState::Rasterizing;
+                    }
+
+                    x += dx;
+
+                    e1 += a1;
+                    e2 += a2;
+                    e3 += a3;
+                }
+                break;
+            case EState::Rasterizing:
+                {
+                    // moving horizontally inside the triangle
+
+                    if (bIsInside)
+                    {
+                        RasterizePixel(x, y);
+                    
+                        x += dx;
+
+                        e1 += a1;
+                        e2 += a2;
+                        e3 += a3;
+                    }
+                    else
+                    {
+                        // start searching the next row for an 'outside' pixel
+                        State = EState::Searching;
+
+                        y += 1;
+                        if (y >= EndY)
+                        {
+                            return;
+                        }
+                        
+                        e1 += b1;
+                        e2 += b2;
+                        e3 += b3;
+                    }
+                }
         }
     }
 }
