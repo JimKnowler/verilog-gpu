@@ -115,6 +115,7 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
     int x = 0;
     int y = 0;
     bool bIsMovingRight = true;
+    int dx = 1;
 
     while (true)
     {
@@ -124,35 +125,34 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
         RenderBuffer[PixelIndex] = bIsInside ? olc::RED : olc::BLACK;
 
         // plan next move: left, right, or down
-        const int NextX = bIsMovingRight ? x + 1 : x - 1;
+        const int NextX = x + dx;
 
         if ((NextX >= 0) && (NextX < kRasterSize.x)) {
             x = NextX;
 
-            if (bIsMovingRight)
-            {
-                e1 += a1;
-                e2 += a2;
-                e3 += a3;
-            } else {
-                e1 -= a1;
-                e2 -= a2;
-                e3 -= a3;
-            }
+            e1 += a1;
+            e2 += a2;
+            e3 += a3;
         } else {
-            bIsMovingRight = !bIsMovingRight;
-
-            const int NextY = y + 1;
-            if (NextY >= kRasterSize.y)
+            // move vertically down one row
+            y += 1;
+            if (y >= kRasterSize.y)
             {
                 return;
             }
-
-            y = NextY;
             
             e1 += b1;
             e2 += b2;
             e3 += b3;
+
+            // alternate horizontal direction
+            bIsMovingRight = !bIsMovingRight;
+            
+            a1 = -a1;
+            a2 = -a2;
+            a3 = -a3;
+
+            dx = -dx;
         }
     }
 }
