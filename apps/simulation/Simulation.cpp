@@ -1,6 +1,7 @@
-#include "App.h"
-#include "FixedPoint.h"
-#include "VerilatorHelpers.h"
+#include "Simulation.h"
+
+#include "gpu/FixedPoint.h"
+#include "gpu/VerilatorHelpers.h"
 
 // whether to use the landscape model instead of the cube
 #define ENABLE_MODEL_LANDSCAPE 1
@@ -42,9 +43,7 @@ namespace {
 
 int main(int argc, char* argv[])
 {
-    printf("hello gpu\n");
-
-    App app;
+    Simulation app;
 
     if (app.Construct(kScreenWidth, kScreenHeight, 1, 1))
     {
@@ -54,12 +53,12 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-App::App() 
+Simulation::Simulation() 
 {
-    sAppName = "verilog-gpu";
+    sAppName = "Simulation";
 }
 
-bool App::OnUserCreate() 
+bool Simulation::OnUserCreate() 
 {
     printf("OnUserCreate\n");
 
@@ -76,7 +75,7 @@ bool App::OnUserCreate()
     return true;
 }
 
-bool App::OnUserDestroy()
+bool Simulation::OnUserDestroy()
 {
     // Final verilatedmodel cleanup
     Rasterizer.final();
@@ -84,7 +83,7 @@ bool App::OnUserDestroy()
     return true;
 }
 
-bool App::OnUserUpdate(float fElapsedTime) {
+bool Simulation::OnUserUpdate(float fElapsedTime) {
     Update(fElapsedTime);
 
     Render();
@@ -92,7 +91,7 @@ bool App::OnUserUpdate(float fElapsedTime) {
     return true;
 }
 
-void App::Update(float DeltaTime)
+void Simulation::Update(float DeltaTime)
 {
     if (GetKey(olc::ESCAPE).bReleased) {
         exit(0);
@@ -124,7 +123,7 @@ void App::Update(float DeltaTime)
     }
 }
 
-void App::RenderPixelFromRasterizerToBackBuffer()
+void Simulation::RenderPixelFromRasterizerToBackBuffer()
 {
     const int x = Rasterizer.o_x;
     const int y = Rasterizer.o_y;
@@ -162,17 +161,17 @@ void App::RenderPixelFromRasterizerToBackBuffer()
 #endif
 }
 
-int App::GetRenderBufferPixelIndex(int x, int y) const
+int Simulation::GetRenderBufferPixelIndex(int x, int y) const
 {
     return (y * kRasterSize.x) + x;
 }
 
-void App::InitAnimation()
+void Simulation::InitAnimation()
 {
     Rotation = 0.0f;
 }
 
-void App::TickAnimation()
+void Simulation::TickAnimation()
 {
     const float DeltaTime = 0.1f;
 #if ENABLE_MODEL_LANDSCAPE
@@ -185,7 +184,7 @@ void App::TickAnimation()
     Rotation = fmodf(Rotation, 2.0f * M_PI);
 }
 
-std::vector<olc::Pixel> &App::GetBackBuffer()
+std::vector<olc::Pixel> &Simulation::GetBackBuffer()
 {
     assert(FrontBuffer >= 0);
     assert(FrontBuffer <= 1);
@@ -193,7 +192,7 @@ std::vector<olc::Pixel> &App::GetBackBuffer()
     return RenderBuffers[1-FrontBuffer];
 }
 
-std::vector<olc::Pixel> &App::GetFrontBuffer()
+std::vector<olc::Pixel> &Simulation::GetFrontBuffer()
 {
     assert(FrontBuffer >= 0);
     assert(FrontBuffer <= 1);
@@ -201,7 +200,7 @@ std::vector<olc::Pixel> &App::GetFrontBuffer()
     return RenderBuffers[FrontBuffer];
 }
 
-void App::ClearBackBuffer()
+void Simulation::ClearBackBuffer()
 {
     auto& BackBuffer = GetBackBuffer();
 
@@ -212,7 +211,7 @@ void App::ClearBackBuffer()
     }
 }
 
-void App::ClearZBuffer()
+void Simulation::ClearZBuffer()
 {
     const int kNumPixels = kRasterSize.x * kRasterSize.y;
     for (int i=0; i<kNumPixels; i++)
@@ -221,7 +220,7 @@ void App::ClearZBuffer()
     }
 }
 
-void App::SwapRenderBuffers()
+void Simulation::SwapRenderBuffers()
 {
     assert(FrontBuffer >= 0);
     assert(FrontBuffer <= 1);
@@ -229,7 +228,7 @@ void App::SwapRenderBuffers()
     FrontBuffer = 1 - FrontBuffer;
 }
 
-FMatrix44 App::MakeWorldTransform() const
+FMatrix44 Simulation::MakeWorldTransform() const
 {
 #if ENABLE_MODEL_LANDSCAPE
     const FMatrix44 Transform = FMatrix44::RotateX(DegreesToRadians(-45.0f)) * FMatrix44::RotateY(Rotation) * FMatrix44::RotateX(DegreesToRadians(90.0f));
@@ -246,7 +245,7 @@ FMatrix44 App::MakeWorldTransform() const
     return Transform;
 }
 
-FMatrix44 App::MakeViewProjectionTransform() const
+FMatrix44 Simulation::MakeViewProjectionTransform() const
 {
     const FMatrix44 View = FMatrix44::LookAt(Eye, Center, Up);
 
@@ -262,7 +261,7 @@ FMatrix44 App::MakeViewProjectionTransform() const
     return Transform;
 }
 
-void App::InitRenderBuffers()
+void Simulation::InitRenderBuffers()
 {
     for (int i=0; i<kNumRenderBuffers; i++)
     {
@@ -270,12 +269,12 @@ void App::InitRenderBuffers()
     }
 }
 
-void App::InitZBuffer()
+void Simulation::InitZBuffer()
 {
     ZBuffer.resize(kRasterSize.x * kRasterSize.y, kClearZ);
 }
 
-void App::InitModel()
+void Simulation::InitModel()
 {
 #if ENABLE_MODEL_LANDSCAPE
     Model.InitLandscape();
@@ -284,7 +283,7 @@ void App::InitModel()
 #endif
 }
 
-void App::InitRasterizer()
+void Simulation::InitRasterizer()
 {
     Rasterizer.i_reset_n = 0;
     Rasterizer.i_start = 0;
@@ -295,7 +294,7 @@ void App::InitRasterizer()
     Rasterizer.eval();
 }
 
-void App::StepRasterizer()
+void Simulation::StepRasterizer()
 {
     Rasterizer.i_start = TriangleAssembly.o_valid;
     Rasterizer.i_v1 = TriangleAssembly.o_v1;
@@ -322,7 +321,7 @@ void App::StepRasterizer()
     }
 }
 
-void App::InitTriangleAssembly()
+void Simulation::InitTriangleAssembly()
 {
     // Reset module
 
@@ -335,7 +334,7 @@ void App::InitTriangleAssembly()
     TriangleAssembly.eval();
 }
 
-void App::InitMemory()
+void Simulation::InitMemory()
 {
     // Prepare memory for Triangle Assembly
 
@@ -352,7 +351,7 @@ void App::InitMemory()
     memcpy(reinterpret_cast<uint8_t*>(&Memory.front()) + kIndexBufferSize, &VertexBuffer.front(), kVertexBufferSize);
 }
 
-void App::StartTriangleAssembly()
+void Simulation::StartTriangleAssembly()
 {
     // start rendering the model stored in the index + vertex buffers
     
@@ -395,7 +394,7 @@ void App::StartTriangleAssembly()
     assert(TriangleAssembly.o_debug_num_triangles == NumTriangles);
 }
 
-void App::StepTriangleAssembly()
+void Simulation::StepTriangleAssembly()
 {
     TriangleAssembly.i_rasterizer_ready = Rasterizer.o_ready;
 
@@ -416,7 +415,7 @@ void App::StepTriangleAssembly()
     TriangleAssembly.eval();
 }
 
-void App::Render()
+void Simulation::Render()
 {
     FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::GREY);
 
@@ -424,7 +423,7 @@ void App::Render()
     DrawRenderBuffer(kOriginFrontBuffer, GetFrontBuffer());
 }
 
-void App::DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
+void Simulation::DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
 {
     for (int x=0; x<kRasterSize.x; x++)
     {

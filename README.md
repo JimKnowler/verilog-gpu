@@ -33,8 +33,9 @@ brew install verilator
 
 Build with CMake
 
-Targets 
-- TestRtl: Run unit tests on verilog designs
-- Main: Run GPU in simulation
+### CMake targets 
 
+- TestRtl: Run unit tests on verilog designs
+- Simulation: Run GPU in simulation
+- Rasterizers: Compare rasterizer algorithms
 

@@ -21,11 +21,13 @@ endif()
 include_directories(.)
 
 #
-# Main Application
+# App - Simulation
+#
+# Run the GPU in simulation
 #
 
-add_executable(Main 
-    gpu/App.cpp
+add_executable(Simulation
+    apps/simulation/Simulation.cpp
     gpu/Vector4.cpp
     gpu/Matrix44.cpp
     gpu/VerilatorHelpers.cpp
@@ -33,10 +35,25 @@ add_executable(Main
     gpu/Model.cpp
 )
 
-verilate(Main SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
-verilate(Main SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
+verilate(Simulation SOURCES gpu/rtl/TriangleAssembly.v INCLUDE_DIRS gpu/rtl)
+verilate(Simulation SOURCES gpu/rtl/TriangleRasterizer.v INCLUDE_DIRS gpu/rtl)
 
-target_link_libraries(Main PRIVATE
+target_link_libraries(Simulation PRIVATE
+    "-framework OpenGL"
+    "-framework GLUT"
+)
+
+#
+# App - Rasterizers
+#
+# Compare software implementations of triangle rasterizers
+#
+
+add_executable(Rasterizers
+    apps/rasterizers/Rasterizers.cpp
+)
+
+target_link_libraries(Rasterizers PRIVATE
     "-framework OpenGL"
     "-framework GLUT"
 )

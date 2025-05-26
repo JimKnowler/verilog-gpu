@@ -13,13 +13,13 @@
 #include "VTriangleRasterizer.h"
 
 // Gpu
-#include "Matrix44.h"
-#include "Model.h"
+#include "gpu/Matrix44.h"
+#include "gpu/Model.h"
 
-class App : public olc::PixelGameEngine
+class Simulation : public olc::PixelGameEngine
 {
 public:
-    App();
+    Simulation();
 
     /// @brief called once at start
     /// @return true, if successful
