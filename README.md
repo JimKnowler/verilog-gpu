@@ -16,7 +16,7 @@ FPGA/Verilog implementation of a basic GPU
  - Requires rewriting triangle rasterizer to remove/minimize divides & multiplies
  - Requires verilog implementation of fixed point divide
 
-## Add more features
+### Add more features
  - Texture Mapping
  - Improve accuracy of z buffer
 
