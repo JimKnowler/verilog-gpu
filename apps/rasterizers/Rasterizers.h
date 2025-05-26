@@ -22,6 +22,18 @@ public:
     bool OnUserUpdate(float fElapsedTime) override;
 
 private:
+    struct FTriangle {
+        olc::vi2d v1;
+        olc::vi2d v2;
+        olc::vi2d v3;
+    };
+
     void Update(float DeltaTime);
-    void Render();    
+    void Render();
+    
+    void DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer);
+    int GetRenderBufferPixelIndex(int x, int y) const;
+
+    void RasterizeBoundingBox(const FTriangle& Triangle, std::vector<olc::Pixel>& RenderBuffer);
+    void RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pixel>& RenderBuffer);
 };
