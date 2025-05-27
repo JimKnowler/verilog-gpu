@@ -67,13 +67,17 @@ void Rasterizers::Render()
         .v3 = { 150, 350 }
     };
 
+    const olc::vi2d kTextOffset(0, 10);
+
     std::vector<olc::Pixel> RenderBufferBoundingBox(kRasterBufferSize, olc::BLACK);
     RasterizeBoundingBox(Triangle, RenderBufferBoundingBox);
-    DrawRenderBuffer(kOriginBoundingBox, RenderBufferBoundingBox);
+    DrawRenderBuffer(kOriginBoundingBox + kTextOffset, RenderBufferBoundingBox);
+    DrawString(kOriginBoundingBox, "Bounding Box", olc::BLACK);
 
     std::vector<olc::Pixel> RenderBufferZigZag(kRasterBufferSize, olc::BLACK);
     RasterizeZigZag(Triangle, RenderBufferZigZag);
-    DrawRenderBuffer(kOriginZigZag, RenderBufferZigZag);
+    DrawRenderBuffer(kOriginZigZag + kTextOffset, RenderBufferZigZag);
+    DrawString(kOriginZigZag, "Zig Zag", olc::BLACK);
 }
 
 void Rasterizers::DrawRenderBuffer(const olc::vi2d& Origin, const std::vector<olc::Pixel>& RenderBuffer)
