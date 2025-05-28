@@ -1,5 +1,7 @@
 #include "Rasterizers.h"
 
+#include <assert.h>
+
 namespace {
     const uint32_t kScreenWidth = 1280;
     const uint32_t kScreenHeight = 720;
@@ -211,16 +213,31 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
     int dx = 1;
 
     enum class EState {
-        Searching,
-        PreRasterizing,
+        FindExternalPixel,
+        FindInternalPixel,          // replace this with flag for whether previous pixel was 'inside'?
         Rasterizing
     };
 
     EState State = EState::Rasterizing;
 
+    size_t s_stored = 0;
+
+    auto StoreS = [&]() -> size_t {
+        return (((e1 > 0) ? 1 : 0) << 0)
+             | (((e2 > 0) ? 1 : 0) << 1)
+             | (((e3 > 0) ? 1 : 0) << 2);
+    };
+
+    const size_t s_fully_inside = 1 | (1 << 1) | (1 << 2);
+
     while (true)
     {
         const bool bIsInside = (e1 >=0) && (e2 >= 0) && (e3 >= 0);
+
+        assert(x >= 0);
+        assert(x < kRasterSize.x);
+        assert(y >= 0);
+        assert(y < kRasterSize.y);
 
         if (bIsInside)
         {
@@ -229,21 +246,19 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
 
         switch (State)
         {
-            case EState::Searching:
+            case EState::FindExternalPixel:
                 {
                     // moving horizontally, while inside the triangle, until outside the triangle
 
-                    if (bIsInside)
-                    {
-                        // keep searching in the current direction for the first pixel 
-                        // that is 'outside'
-                        x += dx;
+                    const size_t s_current = StoreS();
 
-                        e1 += a1;
-                        e2 += a2;
-                        e3 += a3;    
-                    }
-                    else {
+                    const size_t inv_s_current = (~s_current) & s_fully_inside;
+                    const size_t s_combined = (inv_s_current | s_stored);
+
+                    if (s_combined == s_fully_inside)
+                    {
+                        // this pixel has s_current with zeros in at least the same places as the s_stored value
+                        
                         // we have searched past the end of the 'inside' pixels
 
                         // switch horizontal direction
@@ -252,12 +267,22 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                         a2 = -a2;
                         a3 = -a3;
 
-                        State = EState::PreRasterizing;
+                        State = EState::FindInternalPixel;
+                        
                     }
-                    
+                    else
+                    {
+                        // keep searching in the current direction for the first pixel 
+                        // that is 'outside'
+                        x += dx;
+
+                        e1 += a1;
+                        e2 += a2;
+                        e3 += a3;    
+                    }                    
                 }
                 break;
-            case EState::PreRasterizing:
+            case EState::FindInternalPixel:
                 {
                     // moving horizontally from outside, back towards inside the triangle
 
@@ -291,17 +316,19 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                     else
                     {
                         // start searching the next row for an 'outside' pixel
-                        State = EState::Searching;
-
                         y += 1;
                         if (y > MaxY)
                         {
                             return;
                         }
+
+                        State = EState::FindExternalPixel;
                         
                         e1 += b1;
                         e2 += b2;
                         e3 += b3;
+
+                        s_stored = StoreS();
                     }
                 }
         }
