@@ -209,32 +209,26 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
 
     enum class EState {
         FindExternalPixel,
-        FindInternalPixel,          // replace this with flag for whether previous pixel was 'inside'?
         Rasterizing
     };
 
     EState State = EState::Rasterizing;
 
-    size_t s_stored = 0;
-
-    auto StoreS = [&]() -> size_t {
-        return (((e1 > 0) ? 1 : 0) << 0)
-             | (((e2 > 0) ? 1 : 0) << 1)
-             | (((e3 > 0) ? 1 : 0) << 2);
-    };
-
-    const size_t s_fully_inside = 1 | (1 << 1) | (1 << 2);
+    constexpr size_t s_fully_inside = 1 | (1 << 1) | (1 << 2);
+    size_t s_stored = s_fully_inside;
 
     while (true)
     {
-        const bool bIsInside = (e1 >=0) && (e2 >= 0) && (e3 >= 0);
-
         assert(x >= 0);
         assert(x < kRasterSize.x);
         assert(y >= 0);
         assert(y < kRasterSize.y);
 
-        if (bIsInside)
+        const size_t s_current = (((e1 >= 0) ? 1 : 0) << 0)
+                               | (((e2 >= 0) ? 1 : 0) << 1)
+                               | (((e3 >= 0) ? 1 : 0) << 2);
+
+        if (s_current == s_fully_inside)
         {
             const int PixelIndex = GetRenderBufferPixelIndex(x, y);
             RenderBuffer[PixelIndex] = olc::YELLOW;
@@ -245,9 +239,6 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
             case EState::FindExternalPixel:
                 {
                     // moving horizontally, while inside the triangle, until outside the triangle
-
-                    const size_t s_current = StoreS();
-
                     const size_t inv_s_current = (~s_current) & s_fully_inside;
                     const size_t s_combined = (inv_s_current | s_stored);
 
@@ -263,7 +254,7 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                         a2 = -a2;
                         a3 = -a3;
 
-                        State = EState::FindInternalPixel;
+                        State = EState::Rasterizing;
                         
                     }
                     else
@@ -278,50 +269,36 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                     }                    
                 }
                 break;
-            case EState::FindInternalPixel:
-                {
-                    // moving horizontally from outside, back towards inside the triangle
-
-                    if (bIsInside)
-                    {
-                        State = EState::Rasterizing;
-                    }
-
-                    x += dx;
-
-                    e1 += a1;
-                    e2 += a2;
-                    e3 += a3;
-                }
-                break;
             case EState::Rasterizing:
                 {
                     // moving horizontally inside the triangle
-
-                    if (bIsInside)
-                    {                   
-                        x += dx;
-
-                        e1 += a1;
-                        e2 += a2;
-                        e3 += a3;
-                    }
-                    else
+                    if ((s_current != s_fully_inside) && ((s_current | s_stored) == s_fully_inside))
                     {
-                        // start searching the next row for an 'outside' pixel
+                        // we have finished rasterizing this row
+                        // s_current has ones at least in the same places where s_stored had zeros, and is not fully inside
+                    
+                        // start the next row
                         y += 1;
                         if (y > MaxY)
                         {
                             return;
                         }
 
+                        // continue in the same horizontal direction, while we search for an external pixel
                         State = EState::FindExternalPixel;
                         
                         e1 += b1;
                         e2 += b2;
                         e3 += b3;
 
-                        s_stored = StoreS();
+                        // store s for the external pixel on this row
+                        s_stored = s_current;
+                    } else {
+                        x += dx;
+
+                        e1 += a1;
+                        e2 += a2;
+                        e3 += a3;
                     }
                 }
         }
