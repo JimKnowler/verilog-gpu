@@ -190,11 +190,6 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
     EdgeFunction(Triangle.v3, Triangle.v1, a2, b2, c2);
     EdgeFunction(Triangle.v1, Triangle.v2, a3, b3, c3);
 
-    auto RasterizePixel = [this, &RenderBuffer](const int x, const int y) -> void {
-        const int PixelIndex = GetRenderBufferPixelIndex(x, y);
-        RenderBuffer[PixelIndex] = olc::YELLOW;
-    };
-
     // find starting position
     olc::vi2d start;
     GetStartingVertex({Triangle.v1, Triangle.v2, Triangle.v3}, start);
@@ -241,7 +236,8 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
 
         if (bIsInside)
         {
-            RasterizePixel(x, y);
+            const int PixelIndex = GetRenderBufferPixelIndex(x, y);
+            RenderBuffer[PixelIndex] = olc::YELLOW;
         }
 
         switch (State)
@@ -288,7 +284,6 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
 
                     if (bIsInside)
                     {
-                        RasterizePixel(x, y);
                         State = EState::Rasterizing;
                     }
 
@@ -304,9 +299,7 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                     // moving horizontally inside the triangle
 
                     if (bIsInside)
-                    {
-                        RasterizePixel(x, y);
-                    
+                    {                   
                         x += dx;
 
                         e1 += a1;
