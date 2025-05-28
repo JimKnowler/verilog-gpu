@@ -36,4 +36,6 @@ private:
 
     void RasterizeBoundingBox(const FTriangle& Triangle, std::vector<olc::Pixel>& RenderBuffer);
     void RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pixel>& RenderBuffer);
+
+    void GetStartingVertex(const std::vector<olc::vi2d>& vertices, olc::vi2d& v);
 };

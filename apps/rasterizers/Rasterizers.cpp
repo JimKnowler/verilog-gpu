@@ -112,12 +112,17 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
     EdgeFunction(Triangle.v3, Triangle.v1, a2, b2, c2);
     EdgeFunction(Triangle.v1, Triangle.v2, a3, b3, c3);
 
-    int e1 = c1;
-    int e2 = c2;
-    int e3 = c3;
+    // find starting position
+    olc::vi2d start;
+    GetStartingVertex({Triangle.v1, Triangle.v2, Triangle.v3}, start);
+    int x = start.x;
+    int y = start.y;
 
-    int x = 0;
-    int y = 0;
+    // initialise edge functions based on starting x,y
+    int e1 = (a1 * x) + (b1 * y) + c1;
+    int e2 = (a2 * x) + (b2 * y) + c2;
+    int e3 = (a3 * x) + (b3 * y) + c3;
+
     bool bIsMovingRight = true;
     int dx = 1;
 
@@ -180,23 +185,6 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
     EdgeFunction(Triangle.v3, Triangle.v1, a2, b2, c2);
     EdgeFunction(Triangle.v1, Triangle.v2, a3, b3, c3);
 
-    auto GetZigZagStartingVertex = [](const std::vector<olc::vi2d>& vertices, olc::vi2d& v) -> void {
-        int x = INT_MAX;
-        int y = INT_MAX;
-
-        for (const olc::vi2d& test: vertices)
-        {
-            if ((test.y < y) || ((test.y == y) && (test.x < x)))
-            {
-                x = test.x;
-                y = test.y;
-            }
-        }
-
-        v.x = x;
-        v.y = y;
-    };
-
     auto RasterizePixel = [this, &RenderBuffer](const int x, const int y) -> void {
         const int PixelIndex = GetRenderBufferPixelIndex(x, y);
         RenderBuffer[PixelIndex] = olc::YELLOW;
@@ -204,7 +192,7 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
 
     // find starting position
     olc::vi2d start;
-    GetZigZagStartingVertex({Triangle.v1, Triangle.v2, Triangle.v3}, start);
+    GetStartingVertex({Triangle.v1, Triangle.v2, Triangle.v3}, start);
     int x = start.x;
     int y = start.y;
 
@@ -316,3 +304,20 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
         }
     }
 }
+
+void Rasterizers::GetStartingVertex(const std::vector<olc::vi2d>& vertices, olc::vi2d& v) {
+    int x = INT_MAX;
+    int y = INT_MAX;
+
+    for (const olc::vi2d& test: vertices)
+    {
+        if ((test.y < y) || ((test.y == y) && (test.x < x)))
+        {
+            x = test.x;
+            y = test.y;
+        }
+    }
+
+    v.x = x;
+    v.y = y;
+};
