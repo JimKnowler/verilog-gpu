@@ -123,6 +123,9 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
     int e2 = (a2 * x) + (b2 * y) + c2;
     int e3 = (a3 * x) + (b3 * y) + c3;
 
+    // find finishing row
+    const int MaxY = std::max(Triangle.v1.y, std::max(Triangle.v2.y, Triangle.v3.y));
+
     bool bIsMovingRight = true;
     int dx = 1;
 
@@ -151,7 +154,7 @@ void Rasterizers::RasterizeBoundingBox(const FTriangle& Triangle, std::vector<ol
         } else {
             // move vertically down one row
             y += 1;
-            if (y >= kRasterSize.y)
+            if (y > MaxY)
             {
                 return;
             }
@@ -197,7 +200,7 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
     int y = start.y;
 
     // find finishing row
-    const int EndY = std::max(Triangle.v1.y, std::max(Triangle.v2.y, Triangle.v3.y));
+    const int MaxY = std::max(Triangle.v1.y, std::max(Triangle.v2.y, Triangle.v3.y));
 
     // initialise edge functions based on starting x,y
     int e1 = (a1 * x) + (b1 * y) + c1;
@@ -291,7 +294,7 @@ void Rasterizers::RasterizeZigZag(const FTriangle& Triangle, std::vector<olc::Pi
                         State = EState::Searching;
 
                         y += 1;
-                        if (y >= EndY)
+                        if (y > MaxY)
                         {
                             return;
                         }
